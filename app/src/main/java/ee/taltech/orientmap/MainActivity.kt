@@ -1,11 +1,10 @@
 package ee.taltech.orientmap
 
-import android.Manifest
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,12 +16,9 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -32,8 +28,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.buttonStartStop
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.map_track_control.*
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -42,14 +37,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-
-
-
-
     private lateinit var mMap: GoogleMap
-
-
-
 
 
     /**
@@ -69,45 +57,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
-
-    fun buttonStartStopOnClickBottom(view: View) {
-        val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
-        val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
-
-        val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
-        val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
-
-        val notifyView = RemoteViews(packageName, R.layout.notification_orient)
-
-        notifyView.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
-        notifyView.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
-
-        var builder = NotificationCompat.Builder(this, "channel")
-            // small icon is mandatory
-            .setSmallIcon(R.drawable.baseline_room_24)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setContent(notifyView)
-
-        NotificationManagerCompat.from(this).notify(1, builder.build())
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -148,7 +97,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d(TAG, "onResume")
         super.onResume()
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
     }
 
     override fun onPause() {
@@ -287,7 +237,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             // stopping the service
             stopService(Intent(this, LocationService::class.java))
 
-            buttonStartStop.text = "START"
+            buttonTrack.text = "START"
         } else {
             if (Build.VERSION.SDK_INT >= 26) {
                 // starting the FOREGROUND service
@@ -296,7 +246,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 startService(Intent(this, LocationService::class.java))
             }
-            buttonStartStop.text = "STOP"
+            buttonTrack.text = "STOP"
         }
 
         locationServiceActive = !locationServiceActive
@@ -313,13 +263,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     // ============================================== BROADCAST RECEIVER =============================================
-    private inner class InnerBroadcastReceiver: BroadcastReceiver() {
+    private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d(TAG, intent!!.action)
-            when (intent!!.action){
+            when (intent!!.action) {
                 C.LOCATION_UPDATE_ACTION -> {
-                    textViewLatitude.text = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0).toString()
-                    textViewLongitude.text = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0).toString()
+                    textViewLatitude.text =
+                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0).toString()
+                    textViewLongitude.text =
+                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0).toString()
                 }
             }
         }
