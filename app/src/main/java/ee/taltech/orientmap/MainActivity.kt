@@ -10,12 +10,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -31,13 +38,35 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.map_track_control.*
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
+
+    // map display fragment
+    private lateinit var mMap: GoogleMap
+
+    // broadcast vals
+    private val broadcastReceiver = InnerBroadcastReceiver()
+    private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
+
+    // location bool
+    private var locationServiceActive = false
+
+    //// compass related vars
+    lateinit var sensorManager: SensorManager
+    lateinit var image: ImageView
+    lateinit var accelerometer: Sensor
+    lateinit var magnetometer: Sensor
+
+    var currentDegree = 0.0f
+    var lastAccelerometer = FloatArray(3)
+    var lastMagnetometer = FloatArray(3)
+    var lastAccelerometerSet = false
+    var lastMagnetometerSet = false
+    //// end of compass related vars
+
     companion object {
+        // tag for logging
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
-
-
-    private lateinit var mMap: GoogleMap
 
 
     /**
@@ -58,17 +87,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 
-    private val broadcastReceiver = InnerBroadcastReceiver()
-    private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
 
-
-    private var locationServiceActive = false
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
 
+        // open a specific view
         setContentView(R.layout.activity_main)
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -84,7 +110,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             requestPermissions()
         }
 
+        // start accepting location update broadcasts
         broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+
+        // some compass things
+        image = findViewById(R.id.imageViewCompass) as ImageView
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
     }
 
     // ============================================== LIFECYCLE CALLBACKS =============================================
@@ -99,11 +132,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
+
+        // some compass things
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME)
     }
 
     override fun onPause() {
         Log.d(TAG, "onPause")
         super.onPause()
+
+        // some compass things
+        sensorManager.unregisterListener(this, accelerometer)
+        sensorManager.unregisterListener(this, magnetometer)
     }
 
     override fun onStop() {
@@ -276,5 +317,47 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
+    }
+
+
+    // ============================================== COMPASS METHODS =============================================
+    fun lowPass(input: FloatArray, output: FloatArray) {
+        val alpha = 0.05f
+
+        for (i in input.indices) {
+            output[i] = output[i] + alpha * (input[i] - output[i])
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor === accelerometer) {
+            lowPass(event.values, lastAccelerometer)
+            lastAccelerometerSet = true
+        } else if (event.sensor === magnetometer) {
+            lowPass(event.values, lastMagnetometer)
+            lastMagnetometerSet = true
+        }
+
+        if (lastAccelerometerSet && lastMagnetometerSet) {
+            val r = FloatArray(9)
+            if (SensorManager.getRotationMatrix(r, null, lastAccelerometer, lastMagnetometer)) {
+                val orientation = FloatArray(3)
+                SensorManager.getOrientation(r, orientation)
+                val degree = (Math.toDegrees(orientation[0].toDouble()) + 360).toFloat() % 360
+
+                val rotateAnimation = RotateAnimation(
+                    currentDegree,
+                    -degree,
+                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    Animation.RELATIVE_TO_SELF, 0.5f)
+                rotateAnimation.duration = 1000
+                rotateAnimation.fillAfter = true
+
+                image.startAnimation(rotateAnimation)
+                currentDegree = -degree
+            }
+        }
     }
 }
