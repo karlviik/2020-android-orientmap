@@ -94,7 +94,7 @@ class LocationService : Service() {
 
     private fun onNewLocation(location: Location) {
         Log.i(TAG, "New location: $location")
-        if (currentLocation == null){
+        if (currentLocation == null) {
             locationStart = location
             locationCP = location
             locationWP = location
@@ -131,14 +131,16 @@ class LocationService : Service() {
     private fun getLastLocation() {
         try {
             mFusedLocationClient.lastLocation
-                .addOnCompleteListener { task -> if (task.isSuccessful) {
-                    Log.w(TAG, "Task successful");
-                    if (task.result != null){
-                        onNewLocation(task.result!!)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.w(TAG, "Task successful");
+                        if (task.result != null) {
+                            onNewLocation(task.result!!)
+                        }
+                    } else {
+                        Log.w(TAG, "Failed to get location." + task.exception)
                     }
-                } else {
-                    Log.w(TAG, "Failed to get location." + task.exception)
-                }}
+                }
         } catch (unlikely: SecurityException) {
             Log.e(TAG, "Lost location permission. $unlikely")
         }
@@ -205,7 +207,7 @@ class LocationService : Service() {
 
     }
 
-    fun showNotification(){
+    fun showNotification() {
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
 
@@ -243,10 +245,10 @@ class LocationService : Service() {
     }
 
 
-    private inner class InnerBroadcastReceiver: BroadcastReceiver() {
+    private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d(TAG, intent!!.action!!)   // maybe not action!!
-            when(intent.action){
+            when (intent.action) {
                 C.NOTIFICATION_ACTION_WP -> {
                     locationWP = currentLocation
                     distanceWPDirect = 0f

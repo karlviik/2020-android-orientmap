@@ -75,10 +75,10 @@
 
         <ImageButton
             android:id="@+id/imageButtonCp"
-            android:onClick="buttonCPOnClick"
-
             android:layout_width="match_parent"
+
             android:layout_height="match_parent"
+            android:onClick="buttonCPOnClick"
             app:srcCompat="@drawable/baseline_filter_tilt_shift_24" />
     </LinearLayout>
 
@@ -134,10 +134,10 @@
 
         <ImageButton
             android:id="@+id/imageButtonWp"
-            android:onClick="buttonWPOnClick"
-
             android:layout_width="match_parent"
+
             android:layout_height="match_parent"
+            android:onClick="buttonWPOnClick"
             app:srcCompat="@drawable/baseline_filter_vintage_24" />
     </LinearLayout>
 

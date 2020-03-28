@@ -88,7 +88,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
 
-
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -351,7 +350,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     currentDegree,
                     -degree,
                     Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f)
+                    Animation.RELATIVE_TO_SELF, 0.5f
+                )
                 rotateAnimation.duration = 1000
                 rotateAnimation.fillAfter = true
 
