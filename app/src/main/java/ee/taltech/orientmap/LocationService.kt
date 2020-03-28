@@ -212,7 +212,7 @@ class LocationService : Service() {
         val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
         val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
 
-        val notifyview = RemoteViews(packageName, R.layout.bg_track_control)
+        val notifyview = RemoteViews(packageName, R.layout.notification_control)
 
         notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
         notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)

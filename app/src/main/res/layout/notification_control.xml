@@ -16,23 +16,26 @@
 
         <TextView
             android:id="@+id/textViewOverallDirect"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewOverallTotal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewOverallTempo"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -56,23 +59,26 @@
 
         <TextView
             android:id="@+id/textViewCPDirect"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewCPTotal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewCPTempo"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -94,23 +100,26 @@
 
         <TextView
             android:id="@+id/textViewWPDirect"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textAlignment="center" />
 
         <TextView
             android:id="@+id/textViewWPTotal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewWPTempo"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
     </LinearLayout>
