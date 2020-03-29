@@ -8,7 +8,7 @@
     tools:context=".MainActivity">
 
     <include
-        android:id="@+id/include"
+        android:id="@+id/map_fragment"
         layout="@layout/activity_maps"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -21,55 +21,14 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <include
-        android:id="@+id/include2"
+        android:id="@+id/map_point_control"
         layout="@layout/map_track_control"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include" />
-
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="Latitude"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:text="Longitude"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
-
-    <TextView
-        android:id="@+id/textViewLatitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="-"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textViewLongitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:text="-"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toBottomOf="@+id/textViewLatitude" />
+        app:layout_constraintTop_toBottomOf="@+id/map_fragment" />
 
     <ImageView
         android:id="@+id/imageViewCompass"
@@ -78,7 +37,16 @@
         android:adjustViewBounds="true"
         android:contentDescription="@string/compass"
         android:src="@drawable/ic_compass"
-        app:layout_constraintBottom_toBottomOf="@+id/include"
+        app:layout_constraintBottom_toBottomOf="@+id/map_fragment"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/map_general_control"
+        layout="@layout/map_general_control"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
