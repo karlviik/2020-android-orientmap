@@ -142,6 +142,72 @@ class LocationService : Service() {
 		val intent = Intent(C.LOCATION_UPDATE_ACTION)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+		val now = LocalDateTime.now()
+		
+		var overallDistance = ""
+		var overallTime = ""
+		var overallTempo = ""
+		
+		if (locationStart != null) {
+			val hoursFromStart: Int = ChronoUnit.HOURS.between(overallStartTime, now).toInt()
+			val minutesFromStart: Int = ChronoUnit.MINUTES.between(overallStartTime, now).toInt() % 60
+			val secondsFromStart: Int = ChronoUnit.SECONDS.between(overallStartTime, now).toInt() % 60
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(overallStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceOverallTotal / 1000)
+			
+			overallDistance = "%.1f".format(distanceOverallTotal)
+			overallTime = "%d:%02d:%02d".format(hoursFromStart, minutesFromStart, secondsFromStart)
+			overallTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+		} else {
+			overallDistance = "-----"
+			overallTime = "-----"
+			overallTempo = "-----"
+		}
+		
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME, location.latitude)
+		
+		var wpDistance = ""
+		var wpTime = ""
+		var wpTempo = ""
+		
+		if (isWpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
+			wpDistance = "%.1f".format(distanceWpTotal)
+			wpTime = "%.1f".format(distanceWpDirect)
+			wpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+		} else {
+			wpDistance = "-----"
+			wpTime = "-----"
+			wpTempo = "-----"
+		}
+		
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_PACE, location.latitude)
+		
+		var cpDistance = ""
+		var cpTime = ""
+		var cpTempo = ""
+		
+		if (isCpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
+			cpDistance = "%.1f".format(distanceCpTotal)
+			cpTime = "%.1f".format(distanceCpDirect)
+			cpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+		} else {
+			cpDistance = "-----"
+			cpTime = "-----"
+			cpTempo = "-----"
+		}
+		
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_PACE, location.latitude)
+		
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 		
 	}
@@ -249,7 +315,7 @@ class LocationService : Service() {
 		
 		notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
 		notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
-
+		
 		val now = LocalDateTime.now()
 		
 		if (locationStart != null) {
