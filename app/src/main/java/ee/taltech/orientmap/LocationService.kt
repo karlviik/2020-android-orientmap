@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.LatLng
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
 
@@ -70,6 +71,9 @@ class LocationService : Service() {
 	private var wpStartTime: LocalDateTime? = null
 	private var locationWp: Location? = null
 	
+	private var allLocations = ArrayList<Location>()
+	private var allCpLocations = ArrayList<Location>()
+	
 	
 	override fun onCreate() {
 		Log.d(TAG, "onCreate")
@@ -82,6 +86,9 @@ class LocationService : Service() {
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
 		broadcastReceiverIntentFilter.addAction(C.WP_ADD_TO_CURRENT)
 		broadcastReceiverIntentFilter.addAction(C.CP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.REQUEST_CP_LOCATIONS)
+		broadcastReceiverIntentFilter.addAction(C.REQUEST_POINTS_LOCATIONS)
+		broadcastReceiverIntentFilter.addAction(C.REQUEST_WP_LOCATION)
 		
 		registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
 		
@@ -119,6 +126,7 @@ class LocationService : Service() {
 	
 	private fun onNewLocation(location: Location) {
 		Log.i(TAG, "New location: $location")
+		allLocations.add(location)
 		if (currentLocation == null) {
 			locationStart = location
 			overallStartTime = LocalDateTime.now()
@@ -397,12 +405,30 @@ class LocationService : Service() {
 					locationWp = null
 				}
 				C.NOTIFICATION_CP_ADD_TO_CURRENT, C.CP_ADD_TO_CURRENT -> {
-					isCpSet = true
-					locationCp = currentLocation
-					distanceCpDirect = 0f
-					distanceCpTotal = 0f
-					cpStartTime = LocalDateTime.now()
-					showNotification()
+					if (currentLocation != null) {
+						isCpSet = true
+						locationCp = currentLocation
+						allCpLocations.add(currentLocation!!)
+						distanceCpDirect = 0f
+						distanceCpTotal = 0f
+						cpStartTime = LocalDateTime.now()
+						showNotification()
+					}
+				}
+				C.REQUEST_CP_LOCATIONS -> {
+					val replyIntent = Intent(C.REPLY_CP_LOCATIONS)
+					replyIntent.putExtra(C.GENERAL_LOCATIONS, allCpLocations)
+					LocalBroadcastManager.getInstance(mInstance!!.applicationContext).sendBroadcast(replyIntent)
+				}
+				C.REQUEST_POINTS_LOCATIONS -> {
+					val replyIntent = Intent(C.REPLY_POINTS_LOCATIONS)
+					replyIntent.putExtra(C.GENERAL_LOCATIONS, allLocations)
+					LocalBroadcastManager.getInstance(mInstance!!.applicationContext).sendBroadcast(replyIntent)
+				}
+				C.REQUEST_WP_LOCATION -> {
+					val replyIntent = Intent(C.REPLY_WP_LOCATION)
+					replyIntent.putExtra(C.GENERAL_LOCATION, locationWp)
+					LocalBroadcastManager.getInstance(mInstance!!.applicationContext).sendBroadcast(replyIntent)
 				}
 			}
 		}
