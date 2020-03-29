@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -34,7 +35,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
@@ -44,6 +45,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	// map display fragment
 	private lateinit var mMap: GoogleMap
+	
+	private var lastPos: LatLng? = null
+	private var polyline: Polyline? = null
 	
 	// broadcast vals
 	private val broadcastReceiver = InnerBroadcastReceiver()
@@ -61,6 +65,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 	private var rotationLock = 0
 	
+	private var wp: Marker? = null
+	private var points = ArrayList<LatLng>()
 	
 	//// compass related vars
 	lateinit var sensorManager: SensorManager
@@ -91,7 +97,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	 * installed Google Play services and returned to the app.
 	 */
 	override fun onMapReady(googleMap: GoogleMap) {
-	
+		
 		mMap = googleMap
 		mMap.isMyLocationEnabled = true                     // enable blue dot
 		mMap.uiSettings.isCompassEnabled = false            // disable gmap compass
@@ -305,6 +311,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				startService(Intent(this, LocationService::class.java))
 			}
 			buttonTrack.text = "STOP"
+			polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
 		}
 		
 		locationServiceActive = !locationServiceActive
@@ -312,16 +319,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	fun buttonWPOnClick(view: View) {
 		Log.d(TAG, "buttonWPOnClick")
+		wp?.remove()
+		if (lastPos != null) {
+			wp = mMap.addMarker(MarkerOptions().position(lastPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+		}
 		sendBroadcast(Intent(C.WP_ADD_TO_CURRENT))
 	}
 	
 	fun buttonCPOnClick(view: View) {
 		Log.d(TAG, "buttonCPOnClick")
+		if (lastPos != null) {
+			mMap.addMarker(MarkerOptions().position(lastPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
+		}
 		sendBroadcast(Intent(C.CP_ADD_TO_CURRENT))
 	}
 	
 	fun buttonClear(view: View) {
-		mMap.clear()
+		if (!locationServiceActive) {
+			mMap.clear()
+		}
 		// TODO: add a confirmation message
 	}
 	
@@ -348,7 +364,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonCompassToggle(view: View) {
-		val colour : Int
+		val colour: Int
 		compassEnabled = !compassEnabled
 		if (compassEnabled) {
 			colour = R.color.colorCompass
@@ -368,7 +384,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonCenterToggle(view: View) {
-		val colour : Int
+		val colour: Int
 		movementCentered = !movementCentered
 		if (movementCentered) {
 			colour = R.color.colorSelf
@@ -386,15 +402,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			Log.d(TAG, intent!!.action)
 			when (intent!!.action) {
 				C.LOCATION_UPDATE_ACTION -> {
+					lastPos = LatLng(
+						intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
+						intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
+					)
+					points.add(lastPos!!)
+					polyline!!.points = points
+					
+					
+					
 					if (movementCentered) {
-						mMap.moveCamera(
-							CameraUpdateFactory.newLatLng(
-								LatLng(
-									intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
-									intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
-								)
-							)
-						)
+						mMap.moveCamera(CameraUpdateFactory.newLatLng(lastPos))
 					}
 					textViewStart1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE)
 					textViewStart2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME)
