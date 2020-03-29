@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#939393</color>
+    <color name="colorPrimary">#C1C1C1</color>
     <color name="colorPrimaryDark">#5C5C5C</color>
     <color name="colorAccent">#347EFF</color>
-    <color name="colorNorth">#A83B3B</color>
-    <color name="colorSelf">#5794FF</color>
-    <color name="colorCompass">#9E7C4A</color>
+    <color name="colorNorth">#BD2929</color>
+    <color name="colorSelf">#387BF1</color>
+    <color name="colorCompass">#955E10</color>
     <color name="colorClear">#AA0B0B</color>
 </resources>
