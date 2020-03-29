@@ -19,6 +19,7 @@
             android:id="@+id/buttonTrack"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:backgroundTint="@color/colorPrimary"
             android:onClick="buttonStartStopOnClick"
             android:text="START" />
 
@@ -79,6 +80,7 @@
             android:layout_width="match_parent"
 
             android:layout_height="match_parent"
+            android:backgroundTint="@color/colorPrimary"
             android:onClick="buttonCPOnClick"
             app:srcCompat="@drawable/baseline_beenhere_black_48" />
     </LinearLayout>
@@ -138,6 +140,7 @@
             android:layout_width="match_parent"
 
             android:layout_height="match_parent"
+            android:backgroundTint="@color/colorPrimary"
             android:onClick="buttonWPOnClick"
             app:srcCompat="@drawable/baseline_outlined_flag_black_48" />
     </LinearLayout>
