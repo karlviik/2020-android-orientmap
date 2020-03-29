@@ -21,7 +21,8 @@
             android:layout_height="match_parent"
             android:backgroundTint="@color/colorPrimary"
             android:onClick="buttonStartStopOnClick"
-            android:text="START" />
+            android:text="START"
+            android:textSize="12sp" />
 
     </LinearLayout>
 
