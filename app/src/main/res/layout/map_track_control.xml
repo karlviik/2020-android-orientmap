@@ -134,7 +134,7 @@
             android:layout_height="match_parent"
             android:backgroundTint="@color/colorPrimary"
             android:onClick="buttonWPOnClick"
-            app:srcCompat="@drawable/baseline_outlined_flag_black_48" />
+            app:srcCompat="@drawable/baseline_arrow_downward_black_48" />
     </LinearLayout>
 
     <LinearLayout
