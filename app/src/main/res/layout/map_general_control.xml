@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:backgroundTint="@color/colorPrimary">
+
+    <ImageButton
+        android:id="@+id/imageButtonMainDelete"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:onClick="buttonClear"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonMainCenter"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_delete_black_36" />
+
+    <ImageButton
+        android:id="@+id/imageButtonMainRotation"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:onClick="buttonRotationCycle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonMainCompass"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/imageButtonMainCenter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_explore_black_36" />
+
+    <ImageButton
+        android:id="@+id/imageButtonMainCompass"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:onClick="buttonCompassToggle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonMainMenu"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/imageButtonMainRotation"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_flare_black_36" />
+
+    <ImageButton
+        android:id="@+id/imageButtonMainMenu"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:onClick="buttonMenu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/imageButtonMainCompass"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_menu_black_36" />
+
+    <ImageButton
+        android:id="@+id/imageButtonMainCenter"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:onClick="buttonCenterToggle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonMainRotation"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/imageButtonMainDelete"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_my_location_black_36" />
+</androidx.constraintlayout.widget.ConstraintLayout>
