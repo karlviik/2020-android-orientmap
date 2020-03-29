@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -322,7 +323,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonRotationCycle(view: View) {
-		val drawable = DrawableCompat.wrap(imageButtonMainRotation.drawable)
 		var colour = 0
 		// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 		rotationLock = (rotationLock + 1) % 3
@@ -340,12 +340,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				// TODO: disable rotation, force blue dot direction?
 			}
 		}
-		DrawableCompat.setTint(drawable, ContextCompat.getColor(this, colour))
+		changeTint(imageButtonMainRotation.drawable, colour)
 		
 	}
 	
 	fun buttonCompassToggle(view: View) {
-		val drawable = DrawableCompat.wrap(imageButtonMainCompass.drawable)
 		val colour : Int
 		compassEnabled = !compassEnabled
 		if (compassEnabled) {
@@ -355,7 +354,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			colour = R.color.design_default_color_on_secondary
 			// TODO: hide compass
 		}
-		DrawableCompat.setTint(drawable, ContextCompat.getColor(this, colour))
+		changeTint(imageButtonMainCompass.drawable, colour)
 		
 	}
 	
@@ -364,7 +363,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonCenterToggle(view: View) {
-		val drawable = DrawableCompat.wrap(imageButtonMainCenter.drawable)
 		val colour : Int
 		movementCentered = !movementCentered
 		if (movementCentered) {
@@ -374,8 +372,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			colour = R.color.design_default_color_on_secondary
 			// TODO: enable panning and don't center
 		}
-		DrawableCompat.setTint(drawable, ContextCompat.getColor(this, colour))
-		
+		changeTint(imageButtonMainCenter.drawable, colour)
 	}
 	
 	// ============================================== BROADCAST RECEIVER =============================================
@@ -441,4 +438,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			}
 		}
 	}
+	
+	// ============================================== HELPERS =============================================
+	fun changeTint(drawable: Drawable, colour: Int) {
+		DrawableCompat.setTint(DrawableCompat.wrap(drawable), ContextCompat.getColor(this, colour))
+	}
+	
 }
