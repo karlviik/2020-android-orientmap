@@ -4,4 +4,5 @@
     <string name="compass">Compass</string>
     <string name="trackStart">START</string>
     <string name="trackStop">STOP</string>
+    <string name="defaultString">-----</string>
 </resources>

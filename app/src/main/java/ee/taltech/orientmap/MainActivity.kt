@@ -471,6 +471,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	fun buttonClear(view: View) {
 		if (!locationServiceActive) {
 			mMap.clear()
+			textViewStart1.text = resources.getString(R.string.defaultString)
+			textViewStart2.text = resources.getString(R.string.defaultString)
+			textViewStart3.text = resources.getString(R.string.defaultString)
+			textViewCp1.text = resources.getString(R.string.defaultString)
+			textViewCp2.text = resources.getString(R.string.defaultString)
+			textViewCp3.text = resources.getString(R.string.defaultString)
+			textViewWp1.text = resources.getString(R.string.defaultString)
+			textViewWp2.text = resources.getString(R.string.defaultString)
+			textViewWp3.text = resources.getString(R.string.defaultString)
 		}
 		// TODO: add a confirmation message
 	}
