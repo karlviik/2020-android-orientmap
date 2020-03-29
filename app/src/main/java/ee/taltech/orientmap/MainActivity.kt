@@ -94,7 +94,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		private var wp: Marker? = null
 	}
 	
-	
 	/**
 	 * Manipulates the map once available.
 	 * This callback is triggered when the map is ready to be used.
@@ -108,7 +107,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		mMap = googleMap
 		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.437, 24.745), 13f))
-		mMap.isMyLocationEnabled = true                     // enable blue dot
+		if (checkPermissions()) {
+			mMap.isMyLocationEnabled = true // enable blue dot
+		}
 		mMap.uiSettings.isCompassEnabled = false            // disable gmap compass
 		mMap.uiSettings.isMyLocationButtonEnabled = false   // disable gmap center
 		polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
@@ -126,9 +127,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 	}
 	
-	
 	// ============================================== MAIN ENTRY - ONCREATE =============================================
 	override fun onCreate(savedInstanceState: Bundle?) {
+		if (!checkPermissions()) {
+			requestPermissions()
+		}
+		
 		Log.d(TAG, "onCreate")
 		super.onCreate(savedInstanceState)
 		
@@ -143,10 +147,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// safe to call every time
 		createNotificationChannel()
-		
-		if (!checkPermissions()) {
-			requestPermissions()
-		}
 		
 		// start accepting location update broadcasts
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
@@ -215,6 +215,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		Log.e(TAG, "Hmm, onStart is happening")
 		
 		if (locationServiceActive) {
+			buttonTrack.text = "STOP"
 			Log.e(TAG, "Sending intents for requests")
 			sendBroadcast(Intent(C.REQUEST_WP_LOCATION))
 			sendBroadcast(Intent(C.REQUEST_CP_LOCATIONS))
@@ -337,11 +338,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		}
 	}
 	
-	override fun onRequestPermissionsResult(
-		requestCode: Int,
-		permissions: Array<out String>,
-		grantResults: IntArray
-	) {
+	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
 		Log.i(TAG, "onRequestPermissionResult")
 		if (requestCode == C.REQUEST_PERMISSIONS_REQUEST_CODE) {
 			if (grantResults.count() <= 0) { // If user interaction was interrupted, the permission request is cancelled and you receive empty arrays.
@@ -439,15 +436,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			
 			buttonTrack.text = "START"
 		} else {
-			if (Build.VERSION.SDK_INT >= 26) {
-				// starting the FOREGROUND service
-				// service has to display non-dismissable notification within 5 secs
-				startForegroundService(Intent(this, LocationService::class.java))
-			} else {
-				startService(Intent(this, LocationService::class.java))
+			if (checkPermissions()) {
+				mMap.isMyLocationEnabled = true
+				if (Build.VERSION.SDK_INT >= 26) {
+					// starting the FOREGROUND service
+					// service has to display non-dismissable notification within 5 secs
+					startForegroundService(Intent(this, LocationService::class.java))
+				} else {
+					startService(Intent(this, LocationService::class.java))
+				}
+				buttonTrack.text = "STOP"
+				points = ArrayList()
 			}
-			buttonTrack.text = "STOP"
-			points = ArrayList()
 		}
 		
 		locationServiceActive = !locationServiceActive
