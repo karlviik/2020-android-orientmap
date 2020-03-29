@@ -61,9 +61,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 	private var rotationLock = 0
 	
+	
 	//// compass related vars
 	lateinit var sensorManager: SensorManager
-	lateinit var image: ImageView
+	lateinit var compass: ImageView
 	lateinit var accelerometer: Sensor
 	lateinit var magnetometer: Sensor
 	
@@ -129,7 +130,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
 		
 		// some compass things
-		image = findViewById(R.id.imageViewCompass) as ImageView
+		compass = findViewById(R.id.imageViewCompass) as ImageView
 		sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 		magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
@@ -310,16 +311,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	fun buttonWPOnClick(view: View) {
 		Log.d(TAG, "buttonWPOnClick")
-		sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))
+		sendBroadcast(Intent(C.WP_ADD_TO_CURRENT))
 	}
 	
 	fun buttonCPOnClick(view: View) {
 		Log.d(TAG, "buttonCPOnClick")
-		sendBroadcast(Intent(C.NOTIFICATION_ACTION_CP))
+		sendBroadcast(Intent(C.CP_ADD_TO_CURRENT))
 	}
 	
 	fun buttonClear(view: View) {
-		// TODO: clear the whole map of all the stuff only if session is not active, confirmation message?
+		mMap.clear()
+		// TODO: add a confirmation message
 	}
 	
 	fun buttonRotationCycle(view: View) {
@@ -349,9 +351,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		compassEnabled = !compassEnabled
 		if (compassEnabled) {
 			colour = R.color.colorCompass
-			// TODO: show compass
+			compass.visibility = View.VISIBLE
 		} else {
 			colour = R.color.design_default_color_on_secondary
+			compass.clearAnimation()
+			compass.visibility = View.GONE
 			// TODO: hide compass
 		}
 		changeTint(imageButtonMainCompass.drawable, colour)
@@ -417,7 +421,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			lastMagnetometerSet = true
 		}
 		
-		if (lastAccelerometerSet && lastMagnetometerSet) {
+		if (compassEnabled && lastAccelerometerSet && lastMagnetometerSet) {
 			val r = FloatArray(9)
 			if (SensorManager.getRotationMatrix(r, null, lastAccelerometer, lastMagnetometer)) {
 				val orientation = FloatArray(3)
@@ -433,7 +437,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				rotateAnimation.duration = 1000
 				rotateAnimation.fillAfter = true
 				
-				image.startAnimation(rotateAnimation)
+				compass.startAnimation(rotateAnimation)
 				currentDegree = -degree
 			}
 		}

@@ -15,13 +15,29 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
+import org.threeten.bp.LocalDateTime
 
 
 class LocationService : Service() {
 	companion object {
 		private val TAG = this::class.java.declaringClass!!.simpleName
+		private var mInstance: LocationService? = null
+		
+		fun isServiceCreated(): Boolean {
+			return try {
+				// If instance was not cleared but the service was destroyed an Exception will be thrown
+				mInstance != null && mInstance!!.ping()
+			} catch (e: NullPointerException) {
+				// destroyed/not-started
+				false
+			}
+		}
 	}
 	
+	// Simply returns true. If the service is still active, this method will be accessible.
+	private fun ping(): Boolean {
+		return true
+	}
 	
 	// The desired intervals for location updates. Inexact. Updates may be more or less frequent.
 	private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
@@ -37,25 +53,31 @@ class LocationService : Service() {
 	// last received location
 	private var currentLocation: Location? = null
 	
-	private var distanceOverallDirect = 0f
 	private var distanceOverallTotal = 0f
+	private var overallStartTime: LocalDateTime? = null
 	private var locationStart: Location? = null
 	
-	private var distanceCPDirect = 0f
-	private var distanceCPTotal = 0f
-	private var locationCP: Location? = null
+	private var isCpSet = false
+	private var distanceCpDirect = 0f
+	private var distanceCpTotal = 0f
+	private var cpStartTime: LocalDateTime? = null
+	private var locationCp: Location? = null
 	
-	private var distanceWPDirect = 0f
-	private var distanceWPTotal = 0f
-	private var locationWP: Location? = null
+	private var isWpSet = false
+	private var distanceWpDirect = 0f
+	private var distanceWpTotal = 0f
+	private var wpStartTime: LocalDateTime? = null
+	private var locationWp: Location? = null
 	
 	
 	override fun onCreate() {
 		Log.d(TAG, "onCreate")
+		mInstance = this
 		super.onCreate()
 		
-		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_ACTION_CP)
-		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_ACTION_WP)
+		broadcastReceiverIntentFilter.addAction(C.CP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.WP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.WP_REMOVE)
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
 		
 		registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
@@ -96,17 +118,18 @@ class LocationService : Service() {
 		Log.i(TAG, "New location: $location")
 		if (currentLocation == null) {
 			locationStart = location
-			locationCP = location
-			locationWP = location
+			overallStartTime = LocalDateTime.now()
 		} else {
-			distanceOverallDirect = location.distanceTo(locationStart)
 			distanceOverallTotal += location.distanceTo(currentLocation)
 			
-			distanceCPDirect = location.distanceTo(locationCP)
-			distanceCPTotal += location.distanceTo(currentLocation)
-			
-			distanceWPDirect = location.distanceTo(locationWP)
-			distanceWPTotal += location.distanceTo(currentLocation)
+			if (isCpSet) {
+				distanceCpDirect = location.distanceTo(locationCp)
+				distanceCpTotal += location.distanceTo(currentLocation)
+			}
+			if (isWpSet) {
+				distanceWpDirect = location.distanceTo(locationWp)
+				distanceWpTotal += location.distanceTo(currentLocation)
+			}
 		}
 		// save the location for calculations
 		currentLocation = location
@@ -148,6 +171,7 @@ class LocationService : Service() {
 	
 	override fun onDestroy() {
 		Log.d(TAG, "onDestroy")
+		mInstance = null
 		super.onDestroy()
 		
 		//stop location updates
@@ -159,9 +183,10 @@ class LocationService : Service() {
 		// don't forget to unregister broadcast receiver
 		unregisterReceiver(broadcastReceiver)
 		
+		/// this seems weird
 		// broadcast stop to UI
-		val intent = Intent(C.LOCATION_UPDATE_ACTION)
-		LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+//		val intent = Intent(C.LOCATION_UPDATE_ACTION)
+//		LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 	}
 	
 	override fun onLowMemory() {
@@ -175,15 +200,19 @@ class LocationService : Service() {
 		// set counters and locations to 0/null
 		currentLocation = null
 		locationStart = null
-		locationCP = null
-		locationWP = null
+		locationCp = null
+		isCpSet = false
+		cpStartTime = null
+		isWpSet = false
+		locationWp = null
+		wpStartTime = null
 		
-		distanceOverallDirect = 0f
 		distanceOverallTotal = 0f
-		distanceCPDirect = 0f
-		distanceCPTotal = 0f
-		distanceWPDirect = 0f
-		distanceWPTotal = 0f
+		distanceCpDirect = 0f
+		distanceCpTotal = 0f
+		distanceWpDirect = 0f
+		distanceWpTotal = 0f
+		
 		
 		showNotification()
 		
@@ -208,8 +237,8 @@ class LocationService : Service() {
 	}
 	
 	fun showNotification() {
-		val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
-		val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
+		val intentCp = Intent(C.CP_ADD_TO_CURRENT)
+		val intentWp = Intent(C.WP_ADD_TO_CURRENT)
 		
 		val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
 		val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
@@ -220,14 +249,14 @@ class LocationService : Service() {
 		notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
 		
 		
-		notifyview.setTextViewText(R.id.textViewOverallDirect, "%.2f".format(distanceOverallDirect))
-		notifyview.setTextViewText(R.id.textViewOverallTotal, "%.2f".format(distanceOverallTotal))
+//		notifyview.setTextViewText(R.id.textViewOverallTime, "%.2f".formt(distanceOverallDirect))
+		notifyview.setTextViewText(R.id.textViewOverallTime, "%.2f".format(distanceOverallTotal))
 		
-		notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
-		notifyview.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
+		notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWpDirect))
+		notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWpTotal))
 		
-		notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
-		notifyview.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
+		notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCpDirect))
+		notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCpTotal))
 		
 		// construct and show notification
 		val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
@@ -244,21 +273,31 @@ class LocationService : Service() {
 		
 	}
 	
-	
 	private inner class InnerBroadcastReceiver : BroadcastReceiver() {
 		override fun onReceive(context: Context?, intent: Intent?) {
 			Log.d(TAG, intent!!.action!!)   // maybe not action!!
 			when (intent.action) {
-				C.NOTIFICATION_ACTION_WP -> {
-					locationWP = currentLocation
-					distanceWPDirect = 0f
-					distanceWPTotal = 0f
+				C.WP_ADD_TO_CURRENT -> {
+					isWpSet = true
+					locationWp = currentLocation
+					distanceWpDirect = 0f
+					distanceWpTotal = 0f
+					wpStartTime = LocalDateTime.now()
 					showNotification()
 				}
-				C.NOTIFICATION_ACTION_CP -> {
-					locationCP = currentLocation
-					distanceCPDirect = 0f
-					distanceCPTotal = 0f
+				C.WP_REMOVE -> {
+					isWpSet = false
+					distanceWpDirect = 0f
+					distanceWpTotal = 0f
+					wpStartTime = null
+					locationWp = null
+				}
+				C.CP_ADD_TO_CURRENT -> {
+					isCpSet = true
+					locationCp = currentLocation
+					distanceCpDirect = 0f
+					distanceCpTotal = 0f
+					cpStartTime = LocalDateTime.now()
 					showNotification()
 				}
 			}
