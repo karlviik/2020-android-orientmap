@@ -16,6 +16,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 import org.threeten.bp.LocalDateTime
+import org.threeten.bp.temporal.ChronoUnit
+import org.threeten.bp.temporal.TemporalUnit
 
 
 class LocationService : Service() {
@@ -247,16 +249,51 @@ class LocationService : Service() {
 		
 		notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
 		notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
+
+		val now = LocalDateTime.now()
+		
+		if (locationStart != null) {
+			val hoursFromStart: Int = ChronoUnit.HOURS.between(overallStartTime, now).toInt()
+			val minutesFromStart: Int = ChronoUnit.MINUTES.between(overallStartTime, now).toInt() % 60
+			val secondsFromStart: Int = ChronoUnit.SECONDS.between(overallStartTime, now).toInt() % 60
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(overallStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceOverallTotal / 1000)
+			
+			notifyview.setTextViewText(R.id.textViewOverallTotal, "%.1f".format(distanceOverallTotal))
+			notifyview.setTextViewText(R.id.textViewOverallTime, "%d:%02d:%02d".format(hoursFromStart, minutesFromStart, secondsFromStart))
+			notifyview.setTextViewText(R.id.textViewOverallTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
+		} else {
+			notifyview.setTextViewText(R.id.textViewOverallTotal, "-----")
+			notifyview.setTextViewText(R.id.textViewOverallTime, "-----")
+			notifyview.setTextViewText(R.id.textViewOverallTempo, "-----")
+		}
 		
 		
-//		notifyview.setTextViewText(R.id.textViewOverallTime, "%.2f".formt(distanceOverallDirect))
-		notifyview.setTextViewText(R.id.textViewOverallTime, "%.2f".format(distanceOverallTotal))
+		if (isWpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
+			
+			notifyview.setTextViewText(R.id.textViewWPTotal, "%.1f".format(distanceWpTotal))
+			notifyview.setTextViewText(R.id.textViewWPDirect, "%.1f".format(distanceWpDirect))
+			notifyview.setTextViewText(R.id.textViewWPTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
+		} else {
+			notifyview.setTextViewText(R.id.textViewWPTotal, "-----")
+			notifyview.setTextViewText(R.id.textViewWPDirect, "-----")
+			notifyview.setTextViewText(R.id.textViewWPTempo, "-----")
+		}
 		
-		notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWpDirect))
-		notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWpTotal))
-		
-		notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCpDirect))
-		notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCpTotal))
+		if (isCpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
+			val minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
+			
+			notifyview.setTextViewText(R.id.textViewCPTotal, "%.1f".format(distanceCpTotal))
+			notifyview.setTextViewText(R.id.textViewCPDirect, "%.1f".format(distanceCpDirect))
+			notifyview.setTextViewText(R.id.textViewCPTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
+		} else {
+			notifyview.setTextViewText(R.id.textViewCPTotal, "-----")
+			notifyview.setTextViewText(R.id.textViewCPDirect, "-----")
+			notifyview.setTextViewText(R.id.textViewCPTempo, "-----")
+		}
 		
 		// construct and show notification
 		val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
