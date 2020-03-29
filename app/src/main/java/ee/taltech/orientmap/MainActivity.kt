@@ -16,6 +16,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -67,6 +68,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 	private var rotationLock = 0
 	
+	// something to use on map
+	private var waitingForMap = true
+	private var tempWp: LatLng? = null
+	private var tempWpInit = false
+	
 	//// compass related vars
 	private lateinit var sensorManager: SensorManager
 	private lateinit var compass: ImageView
@@ -107,6 +113,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		mMap.uiSettings.isMyLocationButtonEnabled = false   // disable gmap center
 		polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
 		
+		if (waitingForMap) {
+			changeMapCenter()
+			changeRotationLock()
+		}
+		
+		if (tempWpInit) {
+			tempWpInit = false
+			wp = mMap.addMarker(MarkerOptions().position(tempWp!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+			
+		}
+		
 	}
 	
 	
@@ -133,6 +150,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// start accepting location update broadcasts
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+		broadcastReceiverIntentFilter.addAction(C.REPLY_CP_LOCATIONS)
+		broadcastReceiverIntentFilter.addAction(C.REPLY_POINTS_LOCATIONS)
+		broadcastReceiverIntentFilter.addAction(C.REPLY_WP_LOCATION)
 		
 		
 		// some compass things
@@ -140,11 +160,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 		magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+		
+		locationServiceActive = LocationService.isServiceCreated()
 	}
 	
 	// ============================================== LIFECYCLE CALLBACKS =============================================
 	override fun onStart() {
 		Log.d(TAG, "onStart")
+		
+		locationServiceActive = LocationService.isServiceCreated()
+		Log.d(TAG, "$locationServiceActive")
+		
+		
 		super.onStart()
 	}
 	
@@ -157,27 +184,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			)
 		}
 		
-		// got to handle this thing a bit differently
-		// TODO: ask LocationService for the list on restore
-		// points = ArrayList<LatLng>()
-		val latList = savedInstanceState.getDoubleArray("latList")
-		val lngList = savedInstanceState.getDoubleArray("lngList")
-		for (x in latList!!.indices) {
-			points.add(LatLng(
-				latList[x], lngList!![x]
-			))
-		}
-
-		locationServiceActive = savedInstanceState.getBoolean("locationServiceActive")
-		
 		compassEnabled = savedInstanceState.getBoolean("compassEnabled")
 		changeCompass()
 		
 		movementCentered = savedInstanceState.getBoolean("movementCentered")
-		changeMapCenter()
 		
 		rotationLock = savedInstanceState.getInt("rotationLock")
-		changeRotationLock()
+		
+		if (::mMap.isInitialized) {
+			changeMapCenter()
+			changeRotationLock()
+		} else {
+			waitingForMap = true
+		}
 		
 		super.onRestoreInstanceState(savedInstanceState)
 	}
@@ -192,6 +211,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		// some compass things
 		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
 		sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME)
+		
+		Log.e(TAG, "Hmm, onStart is happening")
+		
+		if (locationServiceActive) {
+			Log.e(TAG, "Sending intents for requests")
+			sendBroadcast(Intent(C.REQUEST_WP_LOCATION))
+			sendBroadcast(Intent(C.REQUEST_CP_LOCATIONS))
+			sendBroadcast(Intent(C.REQUEST_POINTS_LOCATIONS))
+		}
 	}
 	
 	override fun onSaveInstanceState(outState: Bundle) {
@@ -202,21 +230,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			outState.putDouble("lastPosLng", lastPos!!.longitude)
 		}
 		
-		// got to handle this thing a bit differently
-		// TODO: ask LocationService for the list on restore
-		// points = ArrayList<LatLng>()
-		val latList = DoubleArray(points.size)
-		val lngList = DoubleArray(points.size)
-		for (x in 0 until points.size) {
-			latList[x] = points[x].latitude
-			lngList[x] = points[x].longitude
-		}
-		outState.putDoubleArray("latList", latList)
-		outState.putDoubleArray("lngList", lngList)
-		
-		// locationServiceActive = false
-		outState.putBoolean("locationServiceActive", locationServiceActive)
-		
 		// compassEnabled = false
 		outState.putBoolean("compassEnabled", compassEnabled)
 		
@@ -225,9 +238,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// rotationLock = 0
 		outState.putInt("rotationLock", rotationLock)
-		
-		// wp: Marker? = null
-		// TODO: somehow save it? No idea how currently
 		
 		super.onSaveInstanceState(outState)
 	}
@@ -500,8 +510,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					points.add(lastPos!!)
 					polyline!!.points = points
 					
-					
-					
 					if (movementCentered) {
 						mMap.animateCamera(CameraUpdateFactory.newLatLng(lastPos))
 					}
@@ -516,6 +524,30 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					textViewCp1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE)
 					textViewCp2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE)
 					textViewCp3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_PACE)
+				}
+				C.REPLY_CP_LOCATIONS -> {
+					mMap.setOnMapLoadedCallback {
+						intent
+							.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)!!
+							.forEach { x -> mMap.addMarker(MarkerOptions().position(LatLng(x.latitude, x.longitude)).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36))) }
+					}
+				}
+				C.REPLY_WP_LOCATION -> {
+					val temp = intent.getParcelableExtra<Location>(C.GENERAL_LOCATION)
+					
+					if (temp != null) {
+						if (::mMap.isInitialized) {
+							wp = mMap.addMarker(MarkerOptions().position(LatLng(temp.latitude, temp.longitude)).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+						} else {
+							tempWp = LatLng(temp.latitude, temp.longitude)
+							tempWpInit = true
+						}
+					}
+				}
+				C.REPLY_POINTS_LOCATIONS -> {
+					intent
+						.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)!!
+						.forEach { x -> points.add(LatLng(x.latitude, x.longitude)) }
 				}
 			}
 		}
@@ -549,16 +581,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				SensorManager.getOrientation(r, orientation)
 				val degree = (Math.toDegrees(orientation[0].toDouble()) + 360).toFloat() % 360
 				if (rotationLock == 2) {
-					mMap.moveCamera(
-						CameraUpdateFactory.newCameraPosition(
-							CameraPosition.builder()
-								.bearing(degree)
-								.target(mMap.cameraPosition.target)
-								.tilt(mMap.cameraPosition.tilt)
-								.zoom(mMap.cameraPosition.zoom)
-								.build()
+					if (::mMap.isInitialized) {
+						mMap.moveCamera(
+							CameraUpdateFactory.newCameraPosition(
+								CameraPosition.builder()
+									.bearing(degree)
+									.target(mMap.cameraPosition.target)
+									.tilt(mMap.cameraPosition.tilt)
+									.zoom(mMap.cameraPosition.zoom)
+									.build()
+							)
 						)
-					)
+					}
 				}
 				if (compassEnabled) {
 					val rotateAnimation = RotateAnimation(
