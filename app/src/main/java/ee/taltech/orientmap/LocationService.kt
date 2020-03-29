@@ -17,7 +17,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.TemporalUnit
 
 
 class LocationService : Service() {
@@ -164,49 +163,49 @@ class LocationService : Service() {
 			overallTempo = "-----"
 		}
 		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE, overallDistance)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE, overallTempo)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME, overallTime)
 		
 		var wpDistance = ""
-		var wpTime = ""
+		var wpDirect = ""
 		var wpTempo = ""
 		
 		if (isWpSet) {
 			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
 			val minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
 			wpDistance = "%.1f".format(distanceWpTotal)
-			wpTime = "%.1f".format(distanceWpDirect)
+			wpDirect = "%.1f".format(distanceWpDirect)
 			wpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
 		} else {
 			wpDistance = "-----"
-			wpTime = "-----"
+			wpDirect = "-----"
 			wpTempo = "-----"
 		}
 		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_PACE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE, wpDirect)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE, wpDistance)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_PACE, wpTempo)
 		
 		var cpDistance = ""
-		var cpTime = ""
+		var cpDirect = ""
 		var cpTempo = ""
 		
 		if (isCpSet) {
 			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
 			val minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
 			cpDistance = "%.1f".format(distanceCpTotal)
-			cpTime = "%.1f".format(distanceCpDirect)
+			cpDirect = "%.1f".format(distanceCpDirect)
 			cpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
 		} else {
 			cpDistance = "-----"
-			cpTime = "-----"
+			cpDirect = "-----"
 			cpTempo = "-----"
 		}
 		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_PACE, location.latitude)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE, cpDirect)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE, cpDistance)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_PACE, cpTempo)
 		
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 		
