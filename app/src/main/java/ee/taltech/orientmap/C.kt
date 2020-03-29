@@ -9,6 +9,15 @@ class C {
 		const val WP_REMOVE = "ee.taltech.kaviik.orientmap.wp.remove"
 		const val WP_ADD_TO_CURRENT = "ee.taltech.kaviik.orientmap.wp"
 		const val CP_ADD_TO_CURRENT = "ee.taltech.kaviik.orientmap.cp"
+		const val REQUEST_WP_LOCATION = "ee.taltech.kaviik.orientmap.wp.location"
+		const val REPLY_WP_LOCATION = "ee.taltech.kaviik.orientmap.wp.location.response"
+		const val REQUEST_CP_LOCATIONS = "ee.taltech.kaviik.orientmap.cp.locations"
+		const val REPLY_CP_LOCATIONS = "ee.taltech.kaviik.orientmap.cp.locations.response"
+		const val REQUEST_POINTS_LOCATIONS = "ee.taltech.kaviik.orientmap.points.locations"
+		const val REPLY_POINTS_LOCATIONS = "ee.taltech.kaviik.orientmap.points.locations.response"
+		const val GENERAL_LOCATION = "ee.taltech.kaviik.orientmap.randos.location"
+		const val GENERAL_LOCATIONS = "ee.taltech.kaviik.orientmap.randos.location"
+		
 		const val LOCATION_UPDATE_ACTION = "ee.taltech.kaviik.orientmap.location_update"
 		
 		const val LOCATION_UPDATE_ACTION_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.latitude"
