@@ -212,11 +212,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
 		sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME)
 		
-		Log.e(TAG, "Hmm, onStart is happening")
-		
 		if (locationServiceActive) {
-			buttonTrack.text = "STOP"
-			Log.e(TAG, "Sending intents for requests")
+			buttonTrack.text = resources.getString(R.string.trackStop)
+			
+			Log.d(TAG, "Sending intents for map data requests")
 			sendBroadcast(Intent(C.REQUEST_WP_LOCATION))
 			sendBroadcast(Intent(C.REQUEST_CP_LOCATIONS))
 			sendBroadcast(Intent(C.REQUEST_POINTS_LOCATIONS))
@@ -434,7 +433,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			// stopping the service
 			stopService(Intent(this, LocationService::class.java))
 			
-			buttonTrack.text = "START"
+			buttonTrack.text = resources.getString(R.string.trackStart)
 		} else {
 			if (checkPermissions()) {
 				mMap.isMyLocationEnabled = true
@@ -445,11 +444,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				} else {
 					startService(Intent(this, LocationService::class.java))
 				}
-				buttonTrack.text = "STOP"
+				buttonTrack.text = resources.getString(R.string.trackStop)
 				points = ArrayList()
 			}
 		}
-		
 		locationServiceActive = !locationServiceActive
 	}
 	
@@ -552,7 +550,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			}
 		}
 	}
-	
 	
 	// ============================================== COMPASS METHODS =============================================
 	private fun lowPass(input: FloatArray, output: FloatArray) {

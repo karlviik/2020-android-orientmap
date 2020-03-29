@@ -2,4 +2,6 @@
     <string name="app_name">Orient Map</string>
     <string name="title_activity_maps">Map</string>
     <string name="compass">Compass</string>
+    <string name="trackStart">START</string>
+    <string name="trackStop">STOP</string>
 </resources>
