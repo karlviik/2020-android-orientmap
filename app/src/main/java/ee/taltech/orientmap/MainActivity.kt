@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
+import kotlinx.android.synthetic.main.notification_control.*
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -395,6 +396,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 							)
 						)
 					}
+					textViewStart1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE)
+					textViewStart2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME)
+					textViewStart3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE)
+					
+					textViewWp1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE)
+					textViewWp2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE)
+					textViewWp3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WP_PACE)
+					
+					textViewCp1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE)
+					textViewCp2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE)
+					textViewCp3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_PACE)
 				}
 			}
 		}
