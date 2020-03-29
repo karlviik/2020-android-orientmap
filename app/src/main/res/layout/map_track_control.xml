@@ -20,7 +20,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:onClick="buttonStartStopOnClick"
-            android:text="Button" />
+            android:text="START" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -79,7 +80,7 @@
 
             android:layout_height="match_parent"
             android:onClick="buttonCPOnClick"
-            app:srcCompat="@drawable/baseline_filter_tilt_shift_24" />
+            app:srcCompat="@drawable/baseline_beenhere_black_48" />
     </LinearLayout>
 
     <LinearLayout
@@ -138,7 +139,7 @@
 
             android:layout_height="match_parent"
             android:onClick="buttonWPOnClick"
-            app:srcCompat="@drawable/baseline_filter_vintage_24" />
+            app:srcCompat="@drawable/baseline_outlined_flag_black_48" />
     </LinearLayout>
 
     <LinearLayout
