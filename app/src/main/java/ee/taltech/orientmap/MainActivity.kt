@@ -48,6 +48,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	private var lastPos: LatLng? = null
 	private var polyline: Polyline? = null
+	private var points = ArrayList<LatLng>()
+	
 	
 	// broadcast vals
 	private val broadcastReceiver = InnerBroadcastReceiver()
@@ -66,7 +68,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	private var rotationLock = 0
 	
 	private var wp: Marker? = null
-	private var points = ArrayList<LatLng>()
 	
 	//// compass related vars
 	lateinit var sensorManager: SensorManager
@@ -99,6 +100,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	override fun onMapReady(googleMap: GoogleMap) {
 		
 		mMap = googleMap
+		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.437, 24.745), 13f))
 		mMap.isMyLocationEnabled = true                     // enable blue dot
 		mMap.uiSettings.isCompassEnabled = false            // disable gmap compass
 		mMap.uiSettings.isMyLocationButtonEnabled = false   // disable gmap center
@@ -292,6 +294,61 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		}
 	}
 	
+	// ============================================== MAP CHANGERS =============================================
+	
+	private fun changeMapCenter() {
+		val colour: Int
+		if (movementCentered) {
+			colour = R.color.colorSelf
+			mMap.uiSettings.isScrollGesturesEnabled = false
+		} else {
+			colour = R.color.design_default_color_on_secondary
+			mMap.uiSettings.isScrollGesturesEnabled = true
+		}
+		changeTint(imageButtonMainCenter.drawable, colour)
+	}
+	
+	private fun changeCompass() {
+		val colour: Int
+		if (compassEnabled) {
+			colour = R.color.colorCompass
+			compass.visibility = View.VISIBLE
+		} else {
+			colour = R.color.design_default_color_on_secondary
+			compass.clearAnimation()
+			compass.visibility = View.GONE
+		}
+		changeTint(imageButtonMainCompass.drawable, colour)
+	}
+	
+	private fun changeRotationLock() {
+		var colour = 0
+		when (rotationLock) {
+			0 -> {
+				colour = R.color.design_default_color_on_secondary
+				mMap.uiSettings.isRotateGesturesEnabled = true
+			}
+			1 -> {
+				colour = R.color.colorNorth
+				mMap.uiSettings.isRotateGesturesEnabled = false
+				mMap.animateCamera(
+					CameraUpdateFactory.newCameraPosition(
+						CameraPosition.builder()
+							.bearing(0F)
+							.target(mMap.cameraPosition.target)
+							.tilt(mMap.cameraPosition.tilt)
+							.zoom(mMap.cameraPosition.zoom)
+							.build()
+					)
+				)
+			}
+			2 -> {
+				colour = R.color.colorSelf
+			}
+		}
+		changeTint(imageButtonMainRotation.drawable, colour)
+	}
+	
 	// ============================================== CLICK HANDLERS =============================================
 	fun buttonStartStopOnClick(view: View) {
 		Log.d(TAG, "buttonStartStopOnClick. locationServiceActive: $locationServiceActive")
@@ -312,6 +369,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			}
 			buttonTrack.text = "STOP"
 			polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
+			points = ArrayList()
 		}
 		
 		locationServiceActive = !locationServiceActive
@@ -342,41 +400,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonRotationCycle(view: View) {
-		var colour = 0
 		// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 		rotationLock = (rotationLock + 1) % 3
-		when (rotationLock) {
-			0 -> {
-				colour = R.color.design_default_color_on_secondary
-				// TODO: enable rotation, remove force
-			}
-			1 -> {
-				colour = R.color.colorNorth
-				// TODO: disable rotation, force north
-			}
-			2 -> {
-				colour = R.color.colorSelf
-				// TODO: disable rotation, force blue dot direction?
-			}
-		}
-		changeTint(imageButtonMainRotation.drawable, colour)
-		
+		changeRotationLock()
 	}
 	
 	fun buttonCompassToggle(view: View) {
-		val colour: Int
 		compassEnabled = !compassEnabled
-		if (compassEnabled) {
-			colour = R.color.colorCompass
-			compass.visibility = View.VISIBLE
-		} else {
-			colour = R.color.design_default_color_on_secondary
-			compass.clearAnimation()
-			compass.visibility = View.GONE
-			// TODO: hide compass
-		}
-		changeTint(imageButtonMainCompass.drawable, colour)
-		
+		changeCompass()
 	}
 	
 	fun buttonMenu(view: View) {
@@ -384,16 +415,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonCenterToggle(view: View) {
-		val colour: Int
 		movementCentered = !movementCentered
-		if (movementCentered) {
-			colour = R.color.colorSelf
-			// TODO: disable panning and keep centered
-		} else {
-			colour = R.color.design_default_color_on_secondary
-			// TODO: enable panning and don't center
-		}
-		changeTint(imageButtonMainCenter.drawable, colour)
+		changeMapCenter()
 	}
 	
 	// ============================================== BROADCAST RECEIVER =============================================
@@ -412,7 +435,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					
 					
 					if (movementCentered) {
-						mMap.moveCamera(CameraUpdateFactory.newLatLng(lastPos))
+						mMap.animateCamera(CameraUpdateFactory.newLatLng(lastPos))
 					}
 					textViewStart1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE)
 					textViewStart2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME)
@@ -451,23 +474,36 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			lastMagnetometerSet = true
 		}
 		
-		if (compassEnabled && lastAccelerometerSet && lastMagnetometerSet) {
+		if (lastAccelerometerSet && lastMagnetometerSet) {
 			val r = FloatArray(9)
 			if (SensorManager.getRotationMatrix(r, null, lastAccelerometer, lastMagnetometer)) {
 				val orientation = FloatArray(3)
 				SensorManager.getOrientation(r, orientation)
 				val degree = (Math.toDegrees(orientation[0].toDouble()) + 360).toFloat() % 360
-				
-				val rotateAnimation = RotateAnimation(
-					currentDegree,
-					-degree,
-					Animation.RELATIVE_TO_SELF, 0.5f,
-					Animation.RELATIVE_TO_SELF, 0.5f
-				)
-				rotateAnimation.duration = 1000
-				rotateAnimation.fillAfter = true
-				
-				compass.startAnimation(rotateAnimation)
+				if (rotationLock == 2) {
+					mMap.moveCamera(
+						CameraUpdateFactory.newCameraPosition(
+							CameraPosition.builder()
+								.bearing(degree)
+								.target(mMap.cameraPosition.target)
+								.tilt(mMap.cameraPosition.tilt)
+								.zoom(mMap.cameraPosition.zoom)
+								.build()
+						)
+					)
+				}
+				if (compassEnabled) {
+					val rotateAnimation = RotateAnimation(
+						currentDegree,
+						-degree,
+						Animation.RELATIVE_TO_SELF, 0.5f,
+						Animation.RELATIVE_TO_SELF, 0.5f
+					)
+					rotateAnimation.duration = 1000
+					rotateAnimation.fillAfter = true
+					
+					compass.startAnimation(rotateAnimation)
+				}
 				currentDegree = -degree
 			}
 		}
