@@ -38,7 +38,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
-import kotlinx.android.synthetic.main.notification_control.*
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -129,6 +128,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// start accepting location update broadcasts
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+		
 		
 		// some compass things
 		compass = findViewById(R.id.imageViewCompass) as ImageView

@@ -76,10 +76,12 @@ class LocationService : Service() {
 		mInstance = this
 		super.onCreate()
 		
-		broadcastReceiverIntentFilter.addAction(C.CP_ADD_TO_CURRENT)
-		broadcastReceiverIntentFilter.addAction(C.WP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_CP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_WP_ADD_TO_CURRENT)
 		broadcastReceiverIntentFilter.addAction(C.WP_REMOVE)
 		broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+		broadcastReceiverIntentFilter.addAction(C.WP_ADD_TO_CURRENT)
+		broadcastReceiverIntentFilter.addAction(C.CP_ADD_TO_CURRENT)
 		
 		registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
 		
@@ -304,8 +306,8 @@ class LocationService : Service() {
 	}
 	
 	fun showNotification() {
-		val intentCp = Intent(C.CP_ADD_TO_CURRENT)
-		val intentWp = Intent(C.WP_ADD_TO_CURRENT)
+		val intentCp = Intent(C.NOTIFICATION_CP_ADD_TO_CURRENT)
+		val intentWp = Intent(C.NOTIFICATION_WP_ADD_TO_CURRENT)
 		
 		val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
 		val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
@@ -379,7 +381,7 @@ class LocationService : Service() {
 		override fun onReceive(context: Context?, intent: Intent?) {
 			Log.d(TAG, intent!!.action!!)   // maybe not action!!
 			when (intent.action) {
-				C.WP_ADD_TO_CURRENT -> {
+				C.NOTIFICATION_WP_ADD_TO_CURRENT, C.WP_ADD_TO_CURRENT -> {
 					isWpSet = true
 					locationWp = currentLocation
 					distanceWpDirect = 0f
@@ -394,7 +396,7 @@ class LocationService : Service() {
 					wpStartTime = null
 					locationWp = null
 				}
-				C.CP_ADD_TO_CURRENT -> {
+				C.NOTIFICATION_CP_ADD_TO_CURRENT, C.CP_ADD_TO_CURRENT -> {
 					isCpSet = true
 					locationCp = currentLocation
 					distanceCpDirect = 0f
