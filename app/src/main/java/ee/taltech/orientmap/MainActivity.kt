@@ -51,14 +51,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	private var points = ArrayList<LatLng>()
 	
 	
-	// broadcast vals
+	// broadcast values
 	private val broadcastReceiver = InnerBroadcastReceiver()
 	private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
 	
 	// location service bool
 	private var locationServiceActive = false
 	
-	// compassenabled bool
+	// compassEnabled bool
 	private var compassEnabled = false
 	
 	// movement center
@@ -67,24 +67,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 	private var rotationLock = 0
 	
-	private var wp: Marker? = null
-	
 	//// compass related vars
-	lateinit var sensorManager: SensorManager
-	lateinit var compass: ImageView
-	lateinit var accelerometer: Sensor
-	lateinit var magnetometer: Sensor
+	private lateinit var sensorManager: SensorManager
+	private lateinit var compass: ImageView
+	private lateinit var accelerometer: Sensor
+	private lateinit var magnetometer: Sensor
 	
-	var currentDegree = 0.0f
-	var lastAccelerometer = FloatArray(3)
-	var lastMagnetometer = FloatArray(3)
-	var lastAccelerometerSet = false
-	var lastMagnetometerSet = false
+	private var currentDegree = 0.0f
+	private var lastAccelerometer = FloatArray(3)
+	private var lastMagnetometer = FloatArray(3)
+	private var lastAccelerometerSet = false
+	private var lastMagnetometerSet = false
 	//// end of compass related vars
 	
 	companion object {
 		// tag for logging
 		private val TAG = this::class.java.declaringClass!!.simpleName
+		
+		// TODO: probably doesn't survive onDestroy
+		private var wp: Marker? = null
 	}
 	
 	
@@ -104,12 +105,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		mMap.isMyLocationEnabled = true                     // enable blue dot
 		mMap.uiSettings.isCompassEnabled = false            // disable gmap compass
 		mMap.uiSettings.isMyLocationButtonEnabled = false   // disable gmap center
+		polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
 		
-		// Add a marker in Sydney and move the camera
-//        val sydney = LatLng(-34.0, 151.0)
-//        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-//        mMap.cameraPosition
 	}
 	
 	
@@ -139,7 +136,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		
 		// some compass things
-		compass = findViewById(R.id.imageViewCompass) as ImageView
+		compass = findViewById(R.id.imageViewCompass)
 		sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 		magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
@@ -149,6 +146,40 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	override fun onStart() {
 		Log.d(TAG, "onStart")
 		super.onStart()
+	}
+	
+	override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+		
+		if (savedInstanceState.getBoolean("lastPosExists")) {
+			lastPos = LatLng(
+				savedInstanceState.getDouble("lastPosLat"),
+				savedInstanceState.getDouble("lastPosLng")
+			)
+		}
+		
+		// got to handle this thing a bit differently
+		// TODO: ask LocationService for the list on restore
+		// points = ArrayList<LatLng>()
+		val latList = savedInstanceState.getDoubleArray("latList")
+		val lngList = savedInstanceState.getDoubleArray("lngList")
+		for (x in latList!!.indices) {
+			points.add(LatLng(
+				latList[x], lngList!![x]
+			))
+		}
+
+		locationServiceActive = savedInstanceState.getBoolean("locationServiceActive")
+		
+		compassEnabled = savedInstanceState.getBoolean("compassEnabled")
+		changeCompass()
+		
+		movementCentered = savedInstanceState.getBoolean("movementCentered")
+		changeMapCenter()
+		
+		rotationLock = savedInstanceState.getInt("rotationLock")
+		changeRotationLock()
+		
+		super.onRestoreInstanceState(savedInstanceState)
 	}
 	
 	override fun onResume() {
@@ -161,6 +192,44 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		// some compass things
 		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
 		sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME)
+	}
+	
+	override fun onSaveInstanceState(outState: Bundle) {
+		// lastPos: LatLng? = null
+		outState.putBoolean("lastPosExists", lastPos != null)
+		if (lastPos != null) {
+			outState.putDouble("lastPosLat", lastPos!!.latitude)
+			outState.putDouble("lastPosLng", lastPos!!.longitude)
+		}
+		
+		// got to handle this thing a bit differently
+		// TODO: ask LocationService for the list on restore
+		// points = ArrayList<LatLng>()
+		val latList = DoubleArray(points.size)
+		val lngList = DoubleArray(points.size)
+		for (x in 0 until points.size) {
+			latList[x] = points[x].latitude
+			lngList[x] = points[x].longitude
+		}
+		outState.putDoubleArray("latList", latList)
+		outState.putDoubleArray("lngList", lngList)
+		
+		// locationServiceActive = false
+		outState.putBoolean("locationServiceActive", locationServiceActive)
+		
+		// compassEnabled = false
+		outState.putBoolean("compassEnabled", compassEnabled)
+		
+		// movementCentered = false
+		outState.putBoolean("movementCentered", movementCentered)
+		
+		// rotationLock = 0
+		outState.putInt("rotationLock", rotationLock)
+		
+		// wp: Marker? = null
+		// TODO: somehow save it? No idea how currently
+		
+		super.onSaveInstanceState(outState)
 	}
 	
 	override fun onPause() {
@@ -197,7 +266,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				C.NOTIFICATION_CHANNEL,
 				"Default channel",
 				NotificationManager.IMPORTANCE_DEFAULT
-			);
+			)
 			
 			//.setShowBadge(false).setSound(null, null);
 			
@@ -368,7 +437,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				startService(Intent(this, LocationService::class.java))
 			}
 			buttonTrack.text = "STOP"
-			polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
 			points = ArrayList()
 		}
 		
@@ -422,8 +490,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// ============================================== BROADCAST RECEIVER =============================================
 	private inner class InnerBroadcastReceiver : BroadcastReceiver() {
 		override fun onReceive(context: Context?, intent: Intent?) {
-			Log.d(TAG, intent!!.action)
-			when (intent!!.action) {
+			Log.d(TAG, intent!!.action!!)
+			when (intent.action) {
 				C.LOCATION_UPDATE_ACTION -> {
 					lastPos = LatLng(
 						intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
@@ -455,7 +523,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	
 	// ============================================== COMPASS METHODS =============================================
-	fun lowPass(input: FloatArray, output: FloatArray) {
+	private fun lowPass(input: FloatArray, output: FloatArray) {
 		val alpha = 0.05f
 		
 		for (i in input.indices) {
@@ -510,7 +578,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	// ============================================== HELPERS =============================================
-	fun changeTint(drawable: Drawable, colour: Int) {
+	private fun changeTint(drawable: Drawable, colour: Int) {
 		DrawableCompat.setTint(DrawableCompat.wrap(drawable), ContextCompat.getColor(this, colour))
 	}
 	
