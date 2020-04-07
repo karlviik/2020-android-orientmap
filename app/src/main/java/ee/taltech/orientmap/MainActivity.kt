@@ -22,6 +22,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.Surface
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
@@ -585,7 +586,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			if (SensorManager.getRotationMatrix(r, null, lastAccelerometer, lastMagnetometer)) {
 				val orientation = FloatArray(3)
 				SensorManager.getOrientation(r, orientation)
-				val degree = (Math.toDegrees(orientation[0].toDouble()) + 360).toFloat() % 360
+				
+				val rotation = windowManager.defaultDisplay.rotation
+				val angle = if (rotation == Surface.ROTATION_90) 90 else if (rotation == Surface.ROTATION_180) 180 else if (rotation == Surface.ROTATION_270) 270 else 0
+				val degree = ((Math.toDegrees(orientation[0].toDouble()) + 360).toFloat() + angle) % 360
 				if (rotationLock == 2) {
 					if (::mMap.isInitialized) {
 						mMap.moveCamera(
