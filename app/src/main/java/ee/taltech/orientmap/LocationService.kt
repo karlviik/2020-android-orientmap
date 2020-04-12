@@ -156,6 +156,7 @@ class LocationService : Service() {
 			}
 		}
 		// save the location for calculations
+		val prevLocation = currentLocation
 		currentLocation = location
 		bufferLocation = location
 		
@@ -165,6 +166,7 @@ class LocationService : Service() {
 		val intent = Intent(C.LOCATION_UPDATE_ACTION)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+		intent.putExtra(C.LOCATION_UPDATE_MOVEMENT_BEARING, prevLocation?.bearingTo(currentLocation) ?: 0)
 		val now = LocalDateTime.now()
 		
 		var overallDistance = ""

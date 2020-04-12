@@ -19,6 +19,7 @@ class C {
 		const val GENERAL_LOCATIONS = "ee.taltech.kaviik.orientmap.randos.location"
 		
 		const val LOCATION_UPDATE_ACTION = "ee.taltech.kaviik.orientmap.location_update"
+		const val LOCATION_UPDATE_MOVEMENT_BEARING = "ee.taltech.kaviik.orientmap.location_update.movement_bearing"
 		
 		const val LOCATION_UPDATE_ACTION_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.latitude"
 		const val LOCATION_UPDATE_ACTION_LONGITUDE = "ee.taltech.kaviik.orientmap.location_update.longitude"
