@@ -15,7 +15,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.model.LatLng
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
 
@@ -24,6 +23,13 @@ class LocationService : Service() {
 	companion object {
 		private val TAG = this::class.java.declaringClass!!.simpleName
 		private var mInstance: LocationService? = null
+		
+		// maximum allowed distance jump between 2 consecutive location updates
+		private const val MAXIMUM_ALLOWED_DISTANCE_JUMP = 50
+		
+		// The desired intervals for location updates. Inexact. Updates may be more or less frequent.
+		private const val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
+		private const val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2
 		
 		fun isServiceCreated(): Boolean {
 			return try {
@@ -41,9 +47,6 @@ class LocationService : Service() {
 		return true
 	}
 	
-	// The desired intervals for location updates. Inexact. Updates may be more or less frequent.
-	private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
-	private val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2
 	
 	private val broadcastReceiver = InnerBroadcastReceiver()
 	private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -54,6 +57,9 @@ class LocationService : Service() {
 	
 	// last received location
 	private var currentLocation: Location? = null
+	
+	// location for handling potential error flicks
+	private var bufferLocation: Location? = null
 	
 	private var distanceOverallTotal = 0f
 	private var overallStartTime: LocalDateTime? = null
@@ -126,6 +132,13 @@ class LocationService : Service() {
 	
 	private fun onNewLocation(location: Location) {
 		Log.i(TAG, "New location: $location")
+		
+		// handling for too big distance jumps
+		if (currentLocation != null && bufferLocation != null &&  location.distanceTo(bufferLocation) > MAXIMUM_ALLOWED_DISTANCE_JUMP) {
+			bufferLocation = location
+			return
+		}
+		
 		allLocations.add(location)
 		if (currentLocation == null) {
 			locationStart = location
@@ -144,6 +157,7 @@ class LocationService : Service() {
 		}
 		// save the location for calculations
 		currentLocation = location
+		bufferLocation = location
 		
 		showNotification()
 		
