@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.location.Location
 import android.os.IBinder
 import android.os.Looper
+import android.util.FloatProperty
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -166,7 +167,7 @@ class LocationService : Service() {
 		val intent = Intent(C.LOCATION_UPDATE_ACTION)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
-		intent.putExtra(C.LOCATION_UPDATE_MOVEMENT_BEARING, prevLocation?.bearingTo(currentLocation) ?: 0)
+		intent.putExtra(C.LOCATION_UPDATE_MOVEMENT_BEARING, prevLocation?.bearingTo(currentLocation))
 		val now = LocalDateTime.now()
 		
 		var overallDistance = ""
