@@ -506,6 +506,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonMenu(view: View) {
+		val intent = Intent(this, SessionViewActivity::class.java)
+		startActivity(intent)
 		// TODO: bring up menu view for future things
 	}
 	
