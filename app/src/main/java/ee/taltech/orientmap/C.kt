@@ -17,12 +17,17 @@ class C {
 		const val REPLY_POINTS_LOCATIONS = "ee.taltech.kaviik.orientmap.points.locations.response"
 		const val GENERAL_LOCATION = "ee.taltech.kaviik.orientmap.randos.location"
 		const val GENERAL_LOCATIONS = "ee.taltech.kaviik.orientmap.randos.location"
+		const val GENERAL_COLORS = "ee.taltech.kaviik.orientmap.randos.colors"
 		
 		const val LOCATION_UPDATE_ACTION = "ee.taltech.kaviik.orientmap.location_update"
 		const val LOCATION_UPDATE_MOVEMENT_BEARING = "ee.taltech.kaviik.orientmap.location_update.movement_bearing"
 		
+		const val LOCATION_UPDATE_ACTION_HAS_LOCATION = "ee.taltech.kaviik.orientmap.location_update.has_location"
 		const val LOCATION_UPDATE_ACTION_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.latitude"
+		const val LOCATION_UPDATE_ACTION_PREV_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.prev_latitude"
 		const val LOCATION_UPDATE_ACTION_LONGITUDE = "ee.taltech.kaviik.orientmap.location_update.longitude"
+		const val LOCATION_UPDATE_ACTION_PREV_LONGITUDE = "ee.taltech.kaviik.orientmap.location_update.prev_longitude"
+		const val LOCATION_UPDATE_ACTION_COLOR = "ee.taltech.kaviik.orientmap.location_update.color"
 		const val LOCATION_UPDATE_ACTION_OVERALL_DISTANCE = "ee.taltech.kaviik.orientmap.location_update.overall.distance"
 		const val LOCATION_UPDATE_ACTION_OVERALL_TIME = "ee.taltech.kaviik.orientmap.location_update.overall.time"
 		const val LOCATION_UPDATE_ACTION_OVERALL_PACE = "ee.taltech.kaviik.orientmap.location_update.overall.pace"
@@ -35,6 +40,11 @@ class C {
 		
 		
 		const val NOTIFICATION_ID = 4321
-		const val REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+		const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
+		
+		
+		const val API_LOCATION_ID = "00000000-0000-0000-0000-000000000001"
+		const val API_WP_ID = "00000000-0000-0000-0000-000000000002"
+		const val API_CP_ID = "00000000-0000-0000-0000-000000000003"
 	}
 }
