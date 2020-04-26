@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -39,6 +38,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.orientmap.service.LocationService
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
 
@@ -48,9 +48,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// map display fragment
 	private lateinit var mMap: GoogleMap
 	
-	private var lastPos: LatLng? = null
-	private var polyline: Polyline? = null
-	private var points = ArrayList<LatLng>()
+	private var curPos: LatLng? = null
+	private var polylines: ArrayList<Polyline> = ArrayList()
 	
 	
 	// broadcast values
@@ -113,7 +112,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		}
 		mMap.uiSettings.isCompassEnabled = false            // disable gmap compass
 		mMap.uiSettings.isMyLocationButtonEnabled = false   // disable gmap center
-		polyline = mMap.addPolyline(PolylineOptions().width(10F).color(Color.RED))
 		
 		if (waitingForMap) {
 			changeMapCenter()
@@ -122,10 +120,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		if (tempWpInit) {
 			tempWpInit = false
-			wp = mMap.addMarker(MarkerOptions().position(tempWp!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
-			
+			addWp(tempWp!!)
 		}
 		
+	}
+	
+	private fun addWp(loc: LatLng) {
+		wp = mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+	}
+	
+	private fun addPolyLine(loc1: LatLng, loc2: LatLng, color: Int) {
+		val newLine = mMap.addPolyline(PolylineOptions().width(10F).color(color))
+		Log.d(TAG, "hello I am adding a polyline I hope")
+		newLine.points = listOf(loc1, loc2)
+		polylines.add(newLine)
 	}
 	
 	// ============================================== MAIN ENTRY - ONCREATE =============================================
@@ -179,7 +187,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	override fun onRestoreInstanceState(savedInstanceState: Bundle) {
 		
 		if (savedInstanceState.getBoolean("lastPosExists")) {
-			lastPos = LatLng(
+			curPos = LatLng(
 				savedInstanceState.getDouble("lastPosLat"),
 				savedInstanceState.getDouble("lastPosLng")
 			)
@@ -225,10 +233,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	
 	override fun onSaveInstanceState(outState: Bundle) {
 		// lastPos: LatLng? = null
-		outState.putBoolean("lastPosExists", lastPos != null)
-		if (lastPos != null) {
-			outState.putDouble("lastPosLat", lastPos!!.latitude)
-			outState.putDouble("lastPosLng", lastPos!!.longitude)
+		outState.putBoolean("lastPosExists", curPos != null)
+		if (curPos != null) {
+			outState.putDouble("lastPosLat", curPos!!.latitude)
+			outState.putDouble("lastPosLng", curPos!!.longitude)
 		}
 		
 		// compassEnabled = false
@@ -438,6 +446,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		} else {
 			if (checkPermissions()) {
 				mMap.isMyLocationEnabled = true
+				mMap.clear()
 				if (Build.VERSION.SDK_INT >= 26) {
 					// starting the FOREGROUND service
 					// service has to display non-dismissable notification within 5 secs
@@ -446,7 +455,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					startService(Intent(this, LocationService::class.java))
 				}
 				buttonTrack.text = resources.getString(R.string.trackStop)
-				points = ArrayList()
+				polylines = ArrayList()
 			}
 		}
 		locationServiceActive = !locationServiceActive
@@ -455,16 +464,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	fun buttonWPOnClick(view: View) {
 		Log.d(TAG, "buttonWPOnClick")
 		wp?.remove()
-		if (lastPos != null) {
-			wp = mMap.addMarker(MarkerOptions().position(lastPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+		if (curPos != null) {
+			addWp(curPos!!)
 		}
 		sendBroadcast(Intent(C.WP_ADD_TO_CURRENT))
 	}
 	
 	fun buttonCPOnClick(view: View) {
 		Log.d(TAG, "buttonCPOnClick")
-		if (lastPos != null) {
-			mMap.addMarker(MarkerOptions().position(lastPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
+		if (curPos != null) {
+			mMap.addMarker(MarkerOptions().position(curPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
 		}
 		sendBroadcast(Intent(C.CP_ADD_TO_CURRENT))
 	}
@@ -511,16 +520,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			Log.d(TAG, intent!!.action!!)
 			when (intent.action) {
 				C.LOCATION_UPDATE_ACTION -> {
-					lastPos = LatLng(
-						intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
-						intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
-					)
-					points.add(lastPos!!)
-					polyline!!.points = points
+					if (intent.getBooleanExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, false)) {
+						curPos = LatLng(
+							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
+							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
+						)
+						val prevPos = LatLng(
+							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, 0.0),
+							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, 0.0)
+						)
+						val color = intent.getIntExtra(C.LOCATION_UPDATE_ACTION_COLOR, 0)
+						addPolyLine(prevPos, curPos!!, color)
+					}
 					
 					if (movementCentered) {
-						mMap.animateCamera(CameraUpdateFactory.newLatLng(lastPos))
+						mMap.animateCamera(CameraUpdateFactory.newLatLng(curPos))
 					}
+					
 					textViewStart1.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE)
 					textViewStart2.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME)
 					textViewStart3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE)
@@ -545,7 +561,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					
 					if (temp != null) {
 						if (::mMap.isInitialized) {
-							wp = mMap.addMarker(MarkerOptions().position(LatLng(temp.latitude, temp.longitude)).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+							addWp(LatLng(temp.latitude, temp.longitude))
 						} else {
 							tempWp = LatLng(temp.latitude, temp.longitude)
 							tempWpInit = true
@@ -553,9 +569,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					}
 				}
 				C.REPLY_POINTS_LOCATIONS -> {
-					intent
-						.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)!!
-						.forEach { x -> points.add(LatLng(x.latitude, x.longitude)) }
+					val locations = intent.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)
+					val colors = intent.getIntegerArrayListExtra(C.GENERAL_COLORS)
+					var loc1 = locations!![0]
+					for (i in 1 until locations.size) {
+						val loc2 = locations[i]
+						addPolyLine(
+							LatLng(loc1.latitude, loc1.longitude),
+							LatLng(loc2.latitude, loc2.longitude),
+							colors!![i - 1]
+						)
+						loc1 = loc2
+					}
 				}
 			}
 		}

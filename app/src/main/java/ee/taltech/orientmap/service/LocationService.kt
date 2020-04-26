@@ -1,4 +1,4 @@
-package ee.taltech.orientmap
+package ee.taltech.orientmap.service
 
 import android.app.PendingIntent
 import android.app.Service
@@ -6,16 +6,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.location.Location
 import android.os.IBinder
 import android.os.Looper
-import android.util.FloatProperty
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
+import ee.taltech.orientmap.C
+import ee.taltech.orientmap.R
+import ee.taltech.orientmap.Utils
+import ee.taltech.orientmap.db.LocationRepository
+import ee.taltech.orientmap.db.SessionRepository
+import ee.taltech.orientmap.poko.LocationModel
+import ee.taltech.orientmap.poko.SessionModel
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
 
@@ -81,11 +88,19 @@ class LocationService : Service() {
 	private var allLocations = ArrayList<Location>()
 	private var allCpLocations = ArrayList<Location>()
 	
+	private lateinit var sessionRepository: SessionRepository
+	private lateinit var locationRepository: LocationRepository
+	private lateinit var session: SessionModel
 	
 	override fun onCreate() {
 		Log.d(TAG, "onCreate")
 		mInstance = this
 		super.onCreate()
+		
+		sessionRepository = SessionRepository(this).open()
+		locationRepository = LocationRepository(this).open()
+		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, 300, Color.GREEN, 600, Color.RED)
+		sessionRepository.add(session)
 		
 		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_CP_ADD_TO_CURRENT)
 		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_WP_ADD_TO_CURRENT)
@@ -115,6 +130,12 @@ class LocationService : Service() {
 		
 	}
 	
+	// 0 is loc, 1 wp, 2 cp
+	private fun addLocationToDb(location: Location, type: Int) {
+		val locM = LocationModel(location, type, session.id)
+		locationRepository.add(locM)
+	}
+	
 	private fun requestLocationUpdates() {
 		Log.i(TAG, "Requesting location updates")
 		
@@ -135,17 +156,24 @@ class LocationService : Service() {
 		Log.i(TAG, "New location: $location")
 		
 		// handling for too big distance jumps
-		if (currentLocation != null && bufferLocation != null &&  location.distanceTo(bufferLocation) > MAXIMUM_ALLOWED_DISTANCE_JUMP) {
+		if (currentLocation != null && bufferLocation != null && location.distanceTo(bufferLocation) > MAXIMUM_ALLOWED_DISTANCE_JUMP) {
 			bufferLocation = location
 			return
 		}
 		
 		allLocations.add(location)
+		addLocationToDb(location, 0)
+		
 		if (currentLocation == null) {
 			locationStart = location
 			overallStartTime = LocalDateTime.now()
+			session.start = LocalDateTime.now() // session edit here m8
 		} else {
 			distanceOverallTotal += location.distanceTo(currentLocation)
+			session.distance = distanceOverallTotal.toInt() // session edit here m8
+			session.duration = ChronoUnit.SECONDS.between(session.start, LocalDateTime.now()).toInt() // session edit here m8
+			session.timePerKm = (session.duration / (session.distance / 1000.0)).toInt()
+			sessionRepository.update(session)
 			
 			if (isCpSet) {
 				distanceCpDirect = location.distanceTo(locationCp)
@@ -165,8 +193,21 @@ class LocationService : Service() {
 		
 		// broadcast new location to UI
 		val intent = Intent(C.LOCATION_UPDATE_ACTION)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+		
+		var hasLocation = false
+		if (prevLocation != null) {
+			hasLocation = true
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, prevLocation.latitude)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, prevLocation.longitude)
+			intent.putExtra(
+				C.LOCATION_UPDATE_ACTION_COLOR,
+				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+			)
+		}
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, hasLocation)
+		
 		intent.putExtra(C.LOCATION_UPDATE_MOVEMENT_BEARING, prevLocation?.bearingTo(currentLocation))
 		val now = LocalDateTime.now()
 		
@@ -266,6 +307,10 @@ class LocationService : Service() {
 	override fun onDestroy() {
 		Log.d(TAG, "onDestroy")
 		mInstance = null
+		
+		sessionRepository.close()
+		locationRepository.close()
+		
 		super.onDestroy()
 		
 		//stop location updates
@@ -327,7 +372,6 @@ class LocationService : Service() {
 	override fun onUnbind(intent: Intent?): Boolean {
 		Log.d(TAG, "onUnbind")
 		return super.onUnbind(intent)
-		
 	}
 	
 	fun showNotification() {
@@ -412,6 +456,7 @@ class LocationService : Service() {
 					distanceWpDirect = 0f
 					distanceWpTotal = 0f
 					wpStartTime = LocalDateTime.now()
+					addLocationToDb(currentLocation!!, 1)
 					showNotification()
 				}
 				C.WP_REMOVE -> {
@@ -429,6 +474,7 @@ class LocationService : Service() {
 						distanceCpDirect = 0f
 						distanceCpTotal = 0f
 						cpStartTime = LocalDateTime.now()
+						addLocationToDb(currentLocation!!, 2)
 						showNotification()
 					}
 				}
@@ -440,6 +486,13 @@ class LocationService : Service() {
 				C.REQUEST_POINTS_LOCATIONS -> {
 					val replyIntent = Intent(C.REPLY_POINTS_LOCATIONS)
 					replyIntent.putExtra(C.GENERAL_LOCATIONS, allLocations)
+					val colors = ArrayList<Int>()
+					for (i in 1 until allLocations.size) {
+						colors.add(
+							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+						)
+					}
+					replyIntent.putExtra(C.GENERAL_COLORS, colors)
 					LocalBroadcastManager.getInstance(mInstance!!.applicationContext).sendBroadcast(replyIntent)
 				}
 				C.REQUEST_WP_LOCATION -> {
