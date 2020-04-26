@@ -509,7 +509,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	fun buttonCPOnClick(view: View) {
 		Log.d(TAG, "buttonCPOnClick")
 		if (curPos != null) {
-			mMap.addMarker(MarkerOptions().position(curPos!!).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
+			addCp(curPos!!)
 		}
 		sendBroadcast(Intent(C.CP_ADD_TO_CURRENT))
 	}
