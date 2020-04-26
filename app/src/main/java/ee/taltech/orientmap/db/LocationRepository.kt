@@ -38,7 +38,7 @@ class LocationRepository(val context: Context) {
 		location.id = db.insert(DbHelper.LOCATION_TABLE_NAME, null, contentValues)
 	}
 	
-	private fun fetch(sessionId: Int): Cursor {
+	private fun fetch(sessionId: Long): Cursor {
 		val columns = arrayOf(
 			DbHelper.LOCATION_ID,
 			DbHelper.LOCATION_SESSION_ID,
@@ -54,7 +54,7 @@ class LocationRepository(val context: Context) {
 		return db.query(DbHelper.SESSION_TABLE_NAME, columns, DbHelper.LOCATION_SESSION_ID + "=?", arrayOf(sessionId.toString()), null, null, orderBy)
 	}
 	
-	fun getSessionLocations(sessionId: Int): List<LocationModel> {
+	fun getSessionLocations(sessionId: Long): List<LocationModel> {
 		val locations = ArrayList<LocationModel>()
 		val cursor = fetch(sessionId)
 		while (cursor.moveToNext()) {
@@ -76,4 +76,7 @@ class LocationRepository(val context: Context) {
 		return locations
 	}
 	
+	fun deleteSessionLocations(sessionId: Long) {
+		db.delete(DbHelper.LOCATION_TABLE_NAME, DbHelper.LOCATION_SESSION_ID + "=?", arrayOf(sessionId.toString()))
+	}
 }
