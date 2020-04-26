@@ -5,4 +5,9 @@
     <string name="trackStart">START</string>
     <string name="trackStop">STOP</string>
     <string name="defaultString">-----</string>
+    <string name="title_activity_session_view">SessionViewActivity</string>
+    <string name="session_distance">Distance: %1$d meters</string>
+    <string name="session_duration">Duration: %1$d:%2$d:%3$d</string>
+    <string name="session_speed">Time per km: %1$d:%2$d</string>
+    <string name="action_settings">Settings</string>
 </resources>
