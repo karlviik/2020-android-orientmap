@@ -51,7 +51,7 @@ class LocationRepository(val context: Context) {
 			DbHelper.LOCATION_TYPE
 		)
 		val orderBy = DbHelper.LOCATION_RECORDED_AT
-		return db.query(DbHelper.SESSION_TABLE_NAME, columns, DbHelper.LOCATION_SESSION_ID + "=?", arrayOf(sessionId.toString()), null, null, orderBy)
+		return db.query(DbHelper.LOCATION_TABLE_NAME, columns, DbHelper.LOCATION_SESSION_ID + "=?", arrayOf(sessionId.toString()), null, null, orderBy)
 	}
 	
 	fun getSessionLocations(sessionId: Long): List<LocationModel> {

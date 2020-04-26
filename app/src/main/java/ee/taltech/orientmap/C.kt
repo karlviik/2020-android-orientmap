@@ -19,6 +19,8 @@ class C {
 		const val GENERAL_LOCATIONS = "ee.taltech.kaviik.orientmap.randos.location"
 		const val GENERAL_COLORS = "ee.taltech.kaviik.orientmap.randos.colors"
 		
+		const val CLEAR_MAP = "ee.taltech.kaviik.orientmap.clear_map"
+		
 		const val LOCATION_UPDATE_ACTION = "ee.taltech.kaviik.orientmap.location_update"
 		const val LOCATION_UPDATE_MOVEMENT_BEARING = "ee.taltech.kaviik.orientmap.location_update.movement_bearing"
 		

@@ -1,23 +1,32 @@
 package ee.taltech.orientmap
 
 import android.content.Context
+import android.content.Intent
+import android.location.Location
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.SessionModel
 import kotlinx.android.synthetic.main.session_tile.view.*
+import org.threeten.bp.OffsetDateTime
 
 
-class DataRecyclerViewAdapterSessions(val context: Context, private val sessionRepo: SessionRepository, private var locationRepo: LocationRepository) : RecyclerView.Adapter<DataRecyclerViewAdapterSessions.ViewHolder>() {
+class DataRecyclerViewAdapterSessions(
+	val context: Context,
+	private val sessionRepo: SessionRepository,
+	private var locationRepo: LocationRepository
+) : RecyclerView.Adapter<DataRecyclerViewAdapterSessions.ViewHolder>() {
+	
 	inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 	
-	var dataSet : MutableList<SessionModel>
+	var dataSet: MutableList<SessionModel>
 	private val inflater: LayoutInflater = LayoutInflater.from(context)
 	
 	init {
@@ -67,8 +76,50 @@ class DataRecyclerViewAdapterSessions(val context: Context, private val sessionR
 			dialogBuilder.setView(dialogView)
 			dialogBuilder.show()
 		}
-		holder.itemView.buttonViewSession.setOnClickListener {
 		
+		holder.itemView.buttonViewSession.setOnClickListener {
+			val clearMapIntent = Intent(C.CLEAR_MAP)
+			LocalBroadcastManager.getInstance(context).sendBroadcast(clearMapIntent)
+			
+			val locs = locationRepo.getSessionLocations(session.id).sortedBy { x -> x.recordedAt }
+			
+			val cps = ArrayList<Location>()
+			for (i in locs) {
+				if (i.locationType == 2) {
+					val newCp = Location("")
+					newCp.latitude = i.latitude
+					newCp.longitude = i.longitude
+					cps.add(newCp)
+				}
+			}
+			MainActivity.cps = cps
+			
+			val lcs = ArrayList<Location>()
+			for (i in locs) {
+				if (i.locationType == 0) {
+					val newLc = Location("")
+					newLc.latitude = i.latitude
+					newLc.longitude = i.longitude
+					newLc.time = i.recordedAt.toInstant(OffsetDateTime.now().offset).toEpochMilli()
+					lcs.add(newLc)
+				}
+			}
+			MainActivity.lcs = lcs
+			
+			
+			val colors = ArrayList<Int>()
+			
+			for (i in 1 until lcs.size) {
+				colors.add(
+					Utils.getColorBasedOnGradient(lcs[i - 1], lcs[i], session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+				)
+			}
+			MainActivity.colors = colors
+			
+			val test = context as SessionViewActivity
+			test.finish()
+			
+			
 		}
 	}
 }

@@ -92,6 +92,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// TODO: probably doesn't survive onDestroy
 		private var wp: Marker? = null
+		
+		public var lcs : ArrayList<Location>? = null
+		public var cps: ArrayList<Location>? = null
+		public var colors: ArrayList<Int>? = null
 	}
 	
 	/**
@@ -104,7 +108,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	 * installed Google Play services and returned to the app.
 	 */
 	override fun onMapReady(googleMap: GoogleMap) {
-		
+		Log.d(TAG, "onMapReady")
 		mMap = googleMap
 		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.437, 24.745), 13f))
 		if (checkPermissions()) {
@@ -123,10 +127,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			addWp(tempWp!!)
 		}
 		
+		
 	}
 	
 	private fun addWp(loc: LatLng) {
 		wp = mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+	}
+	
+	private fun addCp(loc: LatLng) {
+		mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
 	}
 	
 	private fun addPolyLine(loc1: LatLng, loc2: LatLng, color: Int) {
@@ -134,6 +143,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		Log.d(TAG, "hello I am adding a polyline I hope")
 		newLine.points = listOf(loc1, loc2)
 		polylines.add(newLine)
+	}
+	
+	private fun addAllPolyLines(locations: List<Location>, colors: List<Int>) {
+		var loc1 = locations[0]
+		for (i in 1 until locations.size) {
+			val loc2 = locations[i]
+			addPolyLine(
+				LatLng(loc1.latitude, loc1.longitude),
+				LatLng(loc2.latitude, loc2.longitude),
+				colors[i - 1]
+			)
+			loc1 = loc2
+		}
 	}
 	
 	// ============================================== MAIN ENTRY - ONCREATE =============================================
@@ -162,6 +184,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		broadcastReceiverIntentFilter.addAction(C.REPLY_CP_LOCATIONS)
 		broadcastReceiverIntentFilter.addAction(C.REPLY_POINTS_LOCATIONS)
 		broadcastReceiverIntentFilter.addAction(C.REPLY_WP_LOCATION)
+		broadcastReceiverIntentFilter.addAction(C.CLEAR_MAP)
+		
 		
 		
 		// some compass things
@@ -179,7 +203,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		locationServiceActive = LocationService.isServiceCreated()
 		Log.d(TAG, "$locationServiceActive")
-		
 		
 		super.onStart()
 	}
@@ -228,6 +251,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			sendBroadcast(Intent(C.REQUEST_WP_LOCATION))
 			sendBroadcast(Intent(C.REQUEST_CP_LOCATIONS))
 			sendBroadcast(Intent(C.REQUEST_POINTS_LOCATIONS))
+		}
+		
+		Log.d(TAG, colors.toString())
+		Log.d(TAG, lcs.toString())
+		Log.d(TAG, cps.toString())
+		
+		if (colors != null) {
+			mMap.clear()
+			addAllPolyLines(lcs!!, colors!!)
+			colors = null
+			cps!!.forEach {
+				addCp(LatLng(it.latitude, it.longitude))
+			}
 		}
 	}
 	
@@ -555,7 +591,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					mMap.setOnMapLoadedCallback {
 						intent
 							.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)!!
-							.forEach { x -> mMap.addMarker(MarkerOptions().position(LatLng(x.latitude, x.longitude)).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36))) }
+							.forEach { x -> addCp(LatLng(x.latitude, x.longitude)) }
 					}
 				}
 				C.REPLY_WP_LOCATION -> {
@@ -573,15 +609,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				C.REPLY_POINTS_LOCATIONS -> {
 					val locations = intent.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)
 					val colors = intent.getIntegerArrayListExtra(C.GENERAL_COLORS)
-					var loc1 = locations!![0]
-					for (i in 1 until locations.size) {
-						val loc2 = locations[i]
-						addPolyLine(
-							LatLng(loc1.latitude, loc1.longitude),
-							LatLng(loc2.latitude, loc2.longitude),
-							colors!![i - 1]
-						)
-						loc1 = loc2
+					addAllPolyLines(locations!!, colors!!)
+				}
+				C.CLEAR_MAP -> {
+					if (!locationServiceActive) {
+						mMap.clear()
 					}
 				}
 			}

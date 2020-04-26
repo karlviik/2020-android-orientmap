@@ -13,7 +13,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 	
 	companion object {
 		const val DATABASE_NAME = "orientmap.db"
-		const val DATABASE_VERSION = 1
+		const val DATABASE_VERSION = 2
 		
 		const val SESSION_TABLE_NAME = "SESSIONS"
 		
