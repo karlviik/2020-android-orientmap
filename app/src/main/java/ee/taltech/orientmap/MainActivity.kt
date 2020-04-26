@@ -11,10 +11,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
+import android.hardware.*
 import android.location.Location
 import android.net.Uri
 import android.os.Build
@@ -96,6 +93,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		public var lcs : ArrayList<Location>? = null
 		public var cps: ArrayList<Location>? = null
 		public var colors: ArrayList<Int>? = null
+		
+		var cameraPos: CameraPosition? = null
 	}
 	
 	/**
@@ -127,7 +126,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			addWp(tempWp!!)
 		}
 		
-		
+		if (cameraPos != null) {
+			mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos))
+			cameraPos = null
+		}
 	}
 	
 	private fun addWp(loc: LatLng) {
@@ -223,10 +225,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		rotationLock = savedInstanceState.getInt("rotationLock")
 		
+		
+		val cam : CameraPosition? = savedInstanceState.getParcelable("cameraPosition")
 		if (::mMap.isInitialized) {
 			changeMapCenter()
 			changeRotationLock()
+			mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cam))
 		} else {
+			cameraPos = cam!!
 			waitingForMap = true
 		}
 		
@@ -274,6 +280,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			outState.putDouble("lastPosLat", curPos!!.latitude)
 			outState.putDouble("lastPosLng", curPos!!.longitude)
 		}
+		
+		// current camera location
+		outState.putParcelable("cameraPosition", mMap.cameraPosition)
 		
 		// compassEnabled = false
 		outState.putBoolean("compassEnabled", compassEnabled)
