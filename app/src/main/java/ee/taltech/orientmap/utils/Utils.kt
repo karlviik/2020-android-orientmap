@@ -1,6 +1,7 @@
-package ee.taltech.orientmap
+package ee.taltech.orientmap.utils
 
 import android.location.Location
+import ee.taltech.orientmap.C
 
 class Utils {
 	companion object {
@@ -39,6 +40,14 @@ class Utils {
 			val ib: Int = (mb * 255).toInt()
 			
 			return ia + ir + ig + ib
+		}
+		
+		fun getLocationTypeStringBasedOnId(int: Int): String {
+			return when(int) {
+				1 -> C.API_WP_ID
+				2 -> C.API_CP_ID
+				else -> C.API_LOCATION_ID
+			}
 		}
 	}
 }

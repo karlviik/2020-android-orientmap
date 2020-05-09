@@ -3,6 +3,7 @@ package ee.taltech.orientmap.poko.api
 import android.location.Location
 import android.os.Build
 import ee.taltech.orientmap.C
+import ee.taltech.orientmap.utils.Utils
 import ee.taltech.orientmap.poko.LocationModel
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.OffsetDateTime
@@ -29,12 +30,7 @@ class LocationPost {
 		} else {
 			this.verticalAccuracy = 0f
 		}
-		
-		when(gpsLocationTypeIdId) {
-			1 -> this.gpsLocationTypeId = C.API_WP_ID
-			2 -> this.gpsLocationTypeId = C.API_CP_ID
-			else -> this.gpsLocationTypeId = C.API_LOCATION_ID
-		}
+		this.gpsLocationTypeId = Utils.getLocationTypeStringBasedOnId(gpsLocationTypeIdId)
 		this.gpsSessionId = gpsSessionId
 	}
 	

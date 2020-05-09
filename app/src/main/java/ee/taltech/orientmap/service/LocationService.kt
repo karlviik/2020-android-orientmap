@@ -18,7 +18,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 import ee.taltech.orientmap.C
 import ee.taltech.orientmap.R
-import ee.taltech.orientmap.Utils
+import ee.taltech.orientmap.utils.Utils
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.LocationModel

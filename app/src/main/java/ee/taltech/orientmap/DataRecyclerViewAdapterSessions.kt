@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.SessionModel
+import ee.taltech.orientmap.utils.Utils
 import kotlinx.android.synthetic.main.session_tile.view.*
 import org.threeten.bp.OffsetDateTime
 
