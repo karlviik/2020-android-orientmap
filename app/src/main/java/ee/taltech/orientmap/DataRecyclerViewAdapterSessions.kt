@@ -111,7 +111,7 @@ class DataRecyclerViewAdapterSessions(
 			
 			for (i in 1 until lcs.size) {
 				colors.add(
-					Utils.getColorBasedOnGradient(lcs[i - 1], lcs[i], session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+					Utils.getColorBasedOnGradient(lcs[i - 1], lcs[i], session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
 				)
 			}
 			MainActivity.colors = colors

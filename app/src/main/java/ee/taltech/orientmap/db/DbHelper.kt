@@ -24,8 +24,6 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 		const val SESSION_DISTANCE = "distance"
 		const val SESSION_DURATION = "duration"
 		const val SESSION_TIME_PER_KM = "time_per_km"
-		const val SESSION_GRADIENT_SLOW_COLOR = "slow_gradient_color"
-		const val SESSION_GRADIENT_FAST_COLOR = "fast_gradient_color"
 		const val SESSION_GRADIENT_SLOW_TIME = "slow_gradient_time"
 		const val SESSION_GRADIENT_FAST_TIME = "fast_gradient_time"
 		
@@ -38,8 +36,6 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 					"$SESSION_DISTANCE INTEGER NOT NULL, " +
 					"$SESSION_DURATION INTEGER NOT NULL, " +
 					"$SESSION_TIME_PER_KM INTEGER NOT NULL, " +
-					"$SESSION_GRADIENT_SLOW_COLOR INTEGER NOT NULL, " +
-					"$SESSION_GRADIENT_FAST_COLOR INTEGER NOT NULL, " +
 					"$SESSION_GRADIENT_SLOW_TIME INTEGER NOT NULL, " +
 					"$SESSION_GRADIENT_FAST_TIME INTEGER NOT NULL" +
 					");"

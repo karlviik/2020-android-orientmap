@@ -32,8 +32,6 @@ class SessionRepository(val context: Context) {
 		contentValues.put(DbHelper.SESSION_DISTANCE, session.distance)
 		contentValues.put(DbHelper.SESSION_DURATION, session.duration)
 		contentValues.put(DbHelper.SESSION_TIME_PER_KM, session.timePerKm)
-		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_COLOR, session.gradientSlowColor)
-		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_COLOR, session.gradientFastColor)
 		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_TIME, session.gradientSlowTime)
 		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_TIME, session.gradientFastTime)
 		session.id = db.insert(DbHelper.SESSION_TABLE_NAME, null, contentValues)
@@ -48,8 +46,6 @@ class SessionRepository(val context: Context) {
 			DbHelper.SESSION_DISTANCE,
 			DbHelper.SESSION_DURATION,
 			DbHelper.SESSION_TIME_PER_KM,
-			DbHelper.SESSION_GRADIENT_SLOW_COLOR,
-			DbHelper.SESSION_GRADIENT_FAST_COLOR,
 			DbHelper.SESSION_GRADIENT_SLOW_TIME,
 			DbHelper.SESSION_GRADIENT_FAST_TIME
 		)
@@ -76,9 +72,7 @@ class SessionRepository(val context: Context) {
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_DURATION)),
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_TIME_PER_KM)),
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_FAST_TIME)),
-					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_FAST_COLOR)),
-					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_SLOW_TIME)),
-					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_SLOW_COLOR))
+					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_SLOW_TIME))
 				)
 			)
 		}
@@ -94,8 +88,6 @@ class SessionRepository(val context: Context) {
 		contentValues.put(DbHelper.SESSION_DISTANCE, session.distance)
 		contentValues.put(DbHelper.SESSION_DURATION, session.duration)
 		contentValues.put(DbHelper.SESSION_TIME_PER_KM, session.timePerKm)
-		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_COLOR, session.gradientSlowColor)
-		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_COLOR, session.gradientFastColor)
 		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_TIME, session.gradientSlowTime)
 		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_TIME, session.gradientFastTime)
 		db.update(DbHelper.SESSION_TABLE_NAME, contentValues, DbHelper.SESSION_ID + "=?", arrayOf(session.id.toString()))

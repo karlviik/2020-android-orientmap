@@ -99,7 +99,7 @@ class LocationService : Service() {
 		
 		sessionRepository = SessionRepository(this).open()
 		locationRepository = LocationRepository(this).open()
-		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, 300, Color.GREEN, 600, Color.RED)
+		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, 300, 600)
 		sessionRepository.add(session)
 		
 		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_CP_ADD_TO_CURRENT)
@@ -203,7 +203,7 @@ class LocationService : Service() {
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, prevLocation.longitude)
 			intent.putExtra(
 				C.LOCATION_UPDATE_ACTION_COLOR,
-				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
 			)
 		}
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, hasLocation)
@@ -489,7 +489,7 @@ class LocationService : Service() {
 					val colors = ArrayList<Int>()
 					for (i in 1 until allLocations.size) {
 						colors.add(
-							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], session.gradientFastTime, session.gradientSlowTime, session.gradientFastColor, session.gradientSlowColor)
+							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
 						)
 					}
 					replyIntent.putExtra(C.GENERAL_COLORS, colors)

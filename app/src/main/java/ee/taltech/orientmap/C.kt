@@ -1,7 +1,12 @@
 package ee.taltech.orientmap
 
+import android.graphics.Color
+
 class C {
 	companion object {
+		const val SLOW_COLOR = Color.RED
+		const val FAST_COLOR = Color.GREEN
+		
 		const val NOTIFICATION_CHANNEL = "default_channel"
 		
 		const val NOTIFICATION_WP_ADD_TO_CURRENT = "ee.taltech.kaviik.orientmap.notification.wp"
