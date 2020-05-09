@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
 import android.location.Location
 import android.os.IBinder
 import android.os.Looper
@@ -23,6 +22,7 @@ import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.LocationModel
 import ee.taltech.orientmap.poko.SessionModel
+import ee.taltech.orientmap.utils.PreferenceUtils
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
 
@@ -36,8 +36,6 @@ class LocationService : Service() {
 		private const val MAXIMUM_ALLOWED_DISTANCE_JUMP = 50
 		
 		// The desired intervals for location updates. Inexact. Updates may be more or less frequent.
-		private const val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
-		private const val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2
 		
 		fun isServiceCreated(): Boolean {
 			return try {
@@ -55,6 +53,8 @@ class LocationService : Service() {
 		return true
 	}
 	
+	private val updateIntervalInMilliseconds: Long = PreferenceUtils.getGpsUpdateInterval(this)
+	private val fastestUpdateIntervalInMilliseconds = updateIntervalInMilliseconds / 2
 	
 	private val broadcastReceiver = InnerBroadcastReceiver()
 	private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -99,7 +99,11 @@ class LocationService : Service() {
 		
 		sessionRepository = SessionRepository(this).open()
 		locationRepository = LocationRepository(this).open()
-		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, 300, 600)
+		
+		val slowTime = PreferenceUtils.getSlowSpeedTime(this)
+		val fastTime = PreferenceUtils.getFastSpeedTime(this)
+		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, fastTime, slowTime)
+		
 		sessionRepository.add(session)
 		
 		broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_CP_ADD_TO_CURRENT)
@@ -280,10 +284,10 @@ class LocationService : Service() {
 	}
 	
 	private fun createLocationRequest() {
-		mLocationRequest.interval = UPDATE_INTERVAL_IN_MILLISECONDS
-		mLocationRequest.fastestInterval = FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
+		mLocationRequest.interval = updateIntervalInMilliseconds
+		mLocationRequest.fastestInterval = fastestUpdateIntervalInMilliseconds
 		mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-		mLocationRequest.maxWaitTime = UPDATE_INTERVAL_IN_MILLISECONDS
+		mLocationRequest.maxWaitTime = updateIntervalInMilliseconds
 	}
 	
 	private fun getLastLocation() {
