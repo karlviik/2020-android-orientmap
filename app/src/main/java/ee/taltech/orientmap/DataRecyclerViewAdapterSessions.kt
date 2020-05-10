@@ -130,8 +130,8 @@ class DataRecyclerViewAdapterSessions(
 						val listener = Response.Listener<JSONObject> { _ ->
 							// eh, nothing to do really
 						}
-						val errorListener = Response.ErrorListener { _ ->
-							Toast.makeText(context, "Locally saved, but error sending the changes to backend", Toast.LENGTH_SHORT).show()
+						val errorListener = Response.ErrorListener { error ->
+//							Toast.makeText(context, "Locally saved, but error sending the changes to backend", Toast.LENGTH_SHORT).show()
 						}
 						ApiUtils.updateSession(context, listener, errorListener, session, token!!)
 					}
