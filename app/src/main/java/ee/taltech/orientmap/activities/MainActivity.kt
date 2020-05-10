@@ -146,12 +146,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		wp = mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
 	}
 	
-	private fun addCp(loc: LatLng) {
-		if (cps == null) cps = ArrayList()
-		val location = Location("")
-		location.latitude = loc.latitude
-		location.longitude = loc.longitude
-		cps!!.add(location)
+	private fun addCp(loc: LatLng, toArray: Boolean) {
+		if (toArray) {
+			if (cps == null) cps = ArrayList()
+			val location = Location("")
+			location.latitude = loc.latitude
+			location.longitude = loc.longitude
+			cps!!.add(location)
+		}
 		mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
 	}
 	
@@ -182,7 +184,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				mMap.clear()
 				addAllPolyLines(lcs!!, colors!!)
 				cps?.forEach {
-					addCp(LatLng(it.latitude, it.longitude))
+					addCp(LatLng(it.latitude, it.longitude), false)
 				}
 				if (zoom && lcs!!.size > 0) {
 					zoom = false
@@ -546,7 +548,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	fun buttonCPOnClick(view: View) {
 		Log.d(TAG, "buttonCPOnClick")
 		if (curPos != null) {
-			addCp(curPos!!)
+			addCp(curPos!!, true)
 		}
 		sendBroadcast(Intent(C.CP_ADD_TO_CURRENT))
 	}
@@ -642,10 +644,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 					textViewCp3.text = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CP_PACE)
 				}
 				C.REPLY_CP_LOCATIONS -> {
+					cps = ArrayList()
 					mMap.setOnMapLoadedCallback {
 						intent
 							.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)!!
-							.forEach { x -> addCp(LatLng(x.latitude, x.longitude)) }
+							.forEach { x -> addCp(LatLng(x.latitude, x.longitude), true) }
 					}
 				}
 				C.REPLY_WP_LOCATION -> {
