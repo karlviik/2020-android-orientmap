@@ -59,6 +59,7 @@ class SessionViewActivity : AppCompatActivity() {
 		} else {
 			val intent = Intent(this, LoginActivity::class.java)
 			startActivity(intent)
+			this.finish()
 		}
 	}
 	

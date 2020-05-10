@@ -196,7 +196,8 @@ class DataRecyclerViewAdapterSessions(
 		
 		val currentEmail = PreferenceUtils.getUserEmail(context)
 		// if isn't logged in or is with different user or item is fully synced, disable button
-		holder.itemView.buttonSyncSession.isEnabled = !(!PreferenceUtils.isLoggedIn(context) || !currentEmail.equals(session.userEmail) || session.locationCount == session.uploadedLocationCount)
+		holder.itemView.buttonSyncSession.isEnabled =
+			!(!PreferenceUtils.isLoggedIn(context) || (!TextUtils.isEmpty(session.userEmail) && !currentEmail.equals(session.userEmail)) || session.locationCount == session.uploadedLocationCount)
 		
 	}
 }
