@@ -10,14 +10,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Response
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.SessionModel
+import ee.taltech.orientmap.utils.ApiUtils
+import ee.taltech.orientmap.utils.PreferenceUtils
 import ee.taltech.orientmap.utils.Utils
 import kotlinx.android.synthetic.main.session_tile.view.*
+import org.json.JSONObject
 import org.threeten.bp.OffsetDateTime
 import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.FormatStyle
@@ -142,5 +147,54 @@ class DataRecyclerViewAdapterSessions(
 			
 			
 		}
+		holder.itemView.buttonSyncSession.setOnClickListener {
+			val token = PreferenceUtils.getToken(context)
+			val email = PreferenceUtils.getUserEmail(context)
+			if (token != null && !TextUtils.isEmpty(email)) {
+				
+				val locationFunction = {
+					val allLocations = locationRepo.getSessionLocations(session.id)
+					for (location in allLocations) {
+						if (location.isUploaded) continue
+						val listener = Response.Listener<JSONObject> { _ ->
+							session.uploadedLocationCount += 1
+							sessionRepo.update(session)
+							location.isUploaded = true
+							locationRepo.update(location)
+							notifyDataSetChanged()
+						}
+						val errorListener = Response.ErrorListener { _ ->
+							// this could get spammy potentially
+							Toast.makeText(context, "Error saving a location!", Toast.LENGTH_SHORT).show()
+						}
+						ApiUtils.createLocation(context, listener, errorListener, location, session.apiId, token)
+					}
+				}
+				
+				if (TextUtils.isEmpty(session.apiId)) {
+					// session hasn't been created, therefore create it
+					val listener = Response.Listener<JSONObject> { response ->
+						// on success add data to session and save it and start backing up locations
+						session.apiId = response.getString("id") as String
+						session.userEmail = email!!
+						sessionRepo.update(session)
+						locationFunction.invoke()
+					}
+					val errorListener = Response.ErrorListener { _ ->
+						// went south, display some error
+						Toast.makeText(context, "Error creating session!", Toast.LENGTH_SHORT).show()
+					}
+					ApiUtils.createSession(context, listener, errorListener, session, token)
+				} else {
+					// session has been created, start syncing
+					locationFunction.invoke()
+				}
+			}
+		}
+		
+		val currentEmail = PreferenceUtils.getUserEmail(context)
+		// if isn't logged in or is with different user or item is fully synced, disable button
+		holder.itemView.buttonSyncSession.isEnabled = !(!PreferenceUtils.isLoggedIn(context) || !currentEmail.equals(session.userEmail) || session.locationCount == session.uploadedLocationCount)
+		
 	}
 }
