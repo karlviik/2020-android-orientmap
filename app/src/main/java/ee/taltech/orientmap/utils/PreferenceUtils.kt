@@ -40,9 +40,6 @@ class PreferenceUtils {
 			return getPreference(context).getInt("syncIntercal", C.DEFAULT_SYNC_INTERVAL_SECONDS)
 		}
 		
-		fun hasActiveSession(context: Context): Boolean {
-			return getPreference(context).getBoolean("activeSession", false)
-		}
 		
 		
 		fun setLoggedIn(context: Context, boolean: Boolean): Boolean {
@@ -71,10 +68,6 @@ class PreferenceUtils {
 		
 		fun setDefaultSyncInterval(context: Context, interval: Int): Boolean {
 			return getPreference(context).edit().putInt("syncIntercal", interval).commit()
-		}
-		
-		fun setActiveSession(context: Context, bool: Boolean): Boolean {
-			return getPreference(context).edit().putBoolean("activeSession", bool).commit()
 		}
 	}
 }
