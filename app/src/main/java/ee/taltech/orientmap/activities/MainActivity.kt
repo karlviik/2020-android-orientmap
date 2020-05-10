@@ -11,7 +11,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.hardware.*
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.net.Uri
 import android.os.Build
@@ -96,6 +99,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		public var lcs : ArrayList<Location>? = null
 		public var cps: ArrayList<Location>? = null
 		public var colors: ArrayList<Int>? = null
+		public var draw: Boolean = false
+		public var zoom: Boolean = false
 		
 		var cameraPos: CameraPosition? = null
 	}
@@ -133,6 +138,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos))
 			cameraPos = null
 		}
+		
+		potentiallyDrawLines()
 	}
 	
 	private fun addWp(loc: LatLng) {
@@ -140,6 +147,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	private fun addCp(loc: LatLng) {
+		if (cps == null) cps = ArrayList()
+		val location = Location("")
+		location.latitude = loc.latitude
+		location.longitude = loc.longitude
+		cps!!.add(location)
 		mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
 	}
 	
@@ -160,6 +172,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				colors[i - 1]
 			)
 			loc1 = loc2
+		}
+	}
+	
+	private fun potentiallyDrawLines() {
+		if (draw && ::mMap.isInitialized) {
+			draw = false
+			if (colors != null && lcs != null) {
+				mMap.clear()
+				addAllPolyLines(lcs!!, colors!!)
+				cps?.forEach {
+					addCp(LatLng(it.latitude, it.longitude))
+				}
+				if (zoom && lcs!!.size > 0) {
+					zoom = false
+					mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder().target(LatLng(lcs!![0].latitude, lcs!![0].longitude)).zoom(16f).tilt(0f).bearing(0f).build()))
+				}
+			}
 		}
 	}
 	
@@ -266,14 +295,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		Log.d(TAG, lcs.toString())
 		Log.d(TAG, cps.toString())
 		
-		if (colors != null) {
-			mMap.clear()
-			addAllPolyLines(lcs!!, colors!!)
-			colors = null
-			cps!!.forEach {
-				addCp(LatLng(it.latitude, it.longitude))
-			}
-		}
+		potentiallyDrawLines()
+		
 	}
 	
 	override fun onSaveInstanceState(outState: Bundle) {
@@ -295,6 +318,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		
 		// rotationLock = 0
 		outState.putInt("rotationLock", rotationLock)
+		
+		if (!LocationService.isServiceCreated()) draw = true
 		
 		super.onSaveInstanceState(outState)
 	}
@@ -579,7 +604,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, 0.0),
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, 0.0)
 						)
+						if (lcs == null) {
+							lcs = ArrayList()
+							val loc = Location("")
+							loc.latitude = prevPos.latitude
+							loc.longitude = prevPos.longitude
+							lcs!!.add(loc)
+						}
+						val loc = Location("")
+						loc.latitude = curPos!!.latitude
+						loc.longitude = curPos!!.longitude
+						lcs!!.add(loc)
+						
+						if (colors == null) {
+							colors = ArrayList()
+						}
+						
 						val color = intent.getIntExtra(C.LOCATION_UPDATE_ACTION_COLOR, 0)
+						colors!!.add(color)
 						addPolyLine(prevPos, curPos!!, color)
 					}
 					

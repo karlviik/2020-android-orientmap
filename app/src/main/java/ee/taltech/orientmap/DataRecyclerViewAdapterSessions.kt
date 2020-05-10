@@ -186,6 +186,8 @@ class DataRecyclerViewAdapterSessions(
 				)
 			}
 			MainActivity.colors = colors
+			MainActivity.draw = true
+			MainActivity.zoom = true
 			
 			val test = context as SessionViewActivity
 			test.finish()

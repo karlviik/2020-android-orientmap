@@ -577,11 +577,12 @@ class LocationService : Service() {
 				}
 				C.REQUEST_POINTS_LOCATIONS -> {
 					val replyIntent = Intent(C.REPLY_POINTS_LOCATIONS)
-					replyIntent.putExtra(C.GENERAL_LOCATIONS, allLocations)
+					val tempAllLocations = allLocations.toTypedArray()
+					replyIntent.putExtra(C.GENERAL_LOCATIONS, tempAllLocations)
 					val colors = ArrayList<Int>()
-					for (i in 1 until allLocations.size) {
+					for (i in 1 until tempAllLocations.size) {
 						colors.add(
-							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], PreferenceUtils.getFastSpeedTime(mInstance!!), PreferenceUtils.getSlowSpeedTime(mInstance!!), C.FAST_COLOR, C.SLOW_COLOR)
+							Utils.getColorBasedOnGradient(tempAllLocations[i - 1], tempAllLocations[i], PreferenceUtils.getFastSpeedTime(mInstance!!), PreferenceUtils.getSlowSpeedTime(mInstance!!), C.FAST_COLOR, C.SLOW_COLOR)
 						)
 					}
 					replyIntent.putExtra(C.GENERAL_COLORS, colors)
