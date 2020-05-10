@@ -123,6 +123,11 @@ class ApiUtils {
 			handler.addToRequestQueue(httpRequest)
 			
 		}
+		
+		fun cancelAllRequests(context: Context) {
+			val handler = WebApiSingletonHandler.getInstance(context)
+			handler.cancelPendingRequests()
+		}
 	}
 	
 
