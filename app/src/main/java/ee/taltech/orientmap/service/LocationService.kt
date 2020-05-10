@@ -32,7 +32,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
-
+// TODO: on session activate, put it to preferences, on session end, put it to false
 class LocationService : Service() {
 	companion object {
 		private val TAG = this::class.java.declaringClass!!.simpleName
