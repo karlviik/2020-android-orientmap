@@ -117,7 +117,7 @@ class LocationService : Service() {
 		
 		val slowTime = PreferenceUtils.getSlowSpeedTime(this)
 		val fastTime = PreferenceUtils.getFastSpeedTime(this)
-		session = SessionModel("", "Session", LocalDateTime.now(), 0, 0, 0, fastTime, slowTime)
+		session = SessionModel("", "Session", LocalDateTime.now(), fastTime, slowTime)
 		
 		sessionRepository.add(session)
 		

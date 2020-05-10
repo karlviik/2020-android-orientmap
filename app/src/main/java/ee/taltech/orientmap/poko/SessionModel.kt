@@ -13,19 +13,20 @@ class SessionModel {
 	var timePerKm: Int = 0
 	var gradientFastTime: Int = 240  // speed per km min, 300 seconds
 	var gradientSlowTime: Int = 480  // speed per km max, 800 seconds
+	var locationCount: Int = 0
+	var uploadedLocationCount: Int = 0
+	var userEmail = ""
 	
-	constructor(apiId: String, name: String, start: LocalDateTime, distance: Int, duration: Int, timePerKm: Int, gradientFastTime: Int, gradientSlowTime: Int) {
+	
+	constructor(apiId: String, name: String, start: LocalDateTime, gradientFastTime: Int, gradientSlowTime: Int) {
 		this.apiId = apiId
 		this.name = name
 		this.start = start
-		this.distance = distance
-		this.duration = duration
-		this.timePerKm = timePerKm
 		this.gradientFastTime = gradientFastTime
 		this.gradientSlowTime = gradientSlowTime
 	}
 	
-	constructor(id: Long, apiId: String, name: String, start: LocalDateTime, distance: Int, duration: Int, timePerKm: Int, gradientFastTime: Int, gradientSlowTime: Int) {
+	constructor(id: Long, apiId: String, name: String, start: LocalDateTime, distance: Int, duration: Int, timePerKm: Int, gradientFastTime: Int, gradientSlowTime: Int, locationCount: Int, uploadedLocationCount: Int, userEmail: String) {
 		this.id = id
 		this.apiId = apiId
 		this.name = name
@@ -35,5 +36,8 @@ class SessionModel {
 		this.timePerKm = timePerKm
 		this.gradientFastTime = gradientFastTime
 		this.gradientSlowTime = gradientSlowTime
+		this.locationCount = locationCount
+		this.uploadedLocationCount = uploadedLocationCount
+		this.userEmail = userEmail
 	}
 }

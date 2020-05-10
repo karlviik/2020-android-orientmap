@@ -34,6 +34,9 @@ class SessionRepository(val context: Context) {
 		contentValues.put(DbHelper.SESSION_TIME_PER_KM, session.timePerKm)
 		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_TIME, session.gradientSlowTime)
 		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_TIME, session.gradientFastTime)
+		contentValues.put(DbHelper.SESSION_LOCATION_COUNT, session.locationCount)
+		contentValues.put(DbHelper.SESSION_UPLOADED_LOCATION_COUNT, session.uploadedLocationCount)
+		contentValues.put(DbHelper.SESSION_USER_EMAIL, session.userEmail)
 		session.id = db.insert(DbHelper.SESSION_TABLE_NAME, null, contentValues)
 	}
 	
@@ -47,13 +50,15 @@ class SessionRepository(val context: Context) {
 			DbHelper.SESSION_DURATION,
 			DbHelper.SESSION_TIME_PER_KM,
 			DbHelper.SESSION_GRADIENT_SLOW_TIME,
-			DbHelper.SESSION_GRADIENT_FAST_TIME
+			DbHelper.SESSION_GRADIENT_FAST_TIME,
+			DbHelper.SESSION_LOCATION_COUNT,
+			DbHelper.SESSION_UPLOADED_LOCATION_COUNT,
+			DbHelper.SESSION_USER_EMAIL
 		)
 		
 		val orderBy = DbHelper.SESSION_START
 		
-		val cursor = db.query(DbHelper.SESSION_TABLE_NAME, columns, null, null, null, null, orderBy)
-		return cursor
+		return db.query(DbHelper.SESSION_TABLE_NAME, columns, null, null, null, null, orderBy)
 	}
 	
 	fun getAll(): List<SessionModel> {
@@ -72,7 +77,10 @@ class SessionRepository(val context: Context) {
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_DURATION)),
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_TIME_PER_KM)),
 					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_FAST_TIME)),
-					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_SLOW_TIME))
+					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_GRADIENT_SLOW_TIME)),
+					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_LOCATION_COUNT)),
+					cursor.getInt(cursor.getColumnIndex(DbHelper.SESSION_UPLOADED_LOCATION_COUNT)),
+					cursor.getString(cursor.getColumnIndex(DbHelper.SESSION_USER_EMAIL))
 				)
 			)
 		}
@@ -90,9 +98,12 @@ class SessionRepository(val context: Context) {
 		contentValues.put(DbHelper.SESSION_TIME_PER_KM, session.timePerKm)
 		contentValues.put(DbHelper.SESSION_GRADIENT_SLOW_TIME, session.gradientSlowTime)
 		contentValues.put(DbHelper.SESSION_GRADIENT_FAST_TIME, session.gradientFastTime)
+		contentValues.put(DbHelper.SESSION_LOCATION_COUNT, session.locationCount)
+		contentValues.put(DbHelper.SESSION_UPLOADED_LOCATION_COUNT, session.uploadedLocationCount)
+		contentValues.put(DbHelper.SESSION_USER_EMAIL, session.userEmail)
 		db.update(DbHelper.SESSION_TABLE_NAME, contentValues, DbHelper.SESSION_ID + "=?", arrayOf(session.id.toString()))
 	}
-
+	
 	fun delete(session: SessionModel) {
 		db.delete(DbHelper.SESSION_TABLE_NAME, DbHelper.SESSION_ID + "=?", arrayOf(session.id.toString()))
 	}
