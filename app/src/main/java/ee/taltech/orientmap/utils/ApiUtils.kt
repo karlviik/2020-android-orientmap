@@ -2,13 +2,21 @@ package ee.taltech.orientmap.utils
 
 import android.content.Context
 import android.util.Log
+import com.android.volley.NetworkResponse
+import com.android.volley.ParseError
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.HttpHeaderParser
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.JsonRequest
 import ee.taltech.orientmap.WebApiSingletonHandler
 import ee.taltech.orientmap.poko.LocationModel
 import ee.taltech.orientmap.poko.SessionModel
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+import java.io.UnsupportedEncodingException
+import java.nio.charset.Charset
 
 class ApiUtils {
 	companion object {
@@ -93,12 +101,12 @@ class ApiUtils {
 		fun updateSession(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, session: SessionModel, token: String) {
 			val handler = WebApiSingletonHandler.getInstance(context)
 			val requestJsonParams = JSONObject()
-			
+			requestJsonParams.put("id", session.apiId)
 			requestJsonParams.put("name", session.name)
 			requestJsonParams.put("description", session.name)
-			requestJsonParams.put("recordedAt", session.start.toString())
-			requestJsonParams.put("PaceMin", if (session.gradientFastTime != null) session.gradientFastTime else PreferenceUtils.getFastSpeedTime(context))
-			requestJsonParams.put("PaceMax", if (session.gradientSlowTime != null) session.gradientSlowTime else PreferenceUtils.getSlowSpeedTime(context))
+			requestJsonParams.put("paceMin", if (session.gradientFastTime != null) session.gradientFastTime else PreferenceUtils.getFastSpeedTime(context))
+			requestJsonParams.put("paceMax", if (session.gradientSlowTime != null) session.gradientSlowTime else PreferenceUtils.getSlowSpeedTime(context))
+			requestJsonParams.put("gpsSessionTypeId", "00000000-0000-0000-0000-000000000001") // why is this mandatory?
 			
 			
 			val httpRequest = object : JsonObjectRequest(
@@ -134,7 +142,6 @@ class ApiUtils {
 			requestJsonParams.put("verticalAccuracy", location.verticalAccuracy)
 			requestJsonParams.put("gpsSessionId", sessionId)
 			requestJsonParams.put("gpsLocationTypeId", Utils.getLocationTypeStringBasedOnId(location.locationType))
-			
 			val httpRequest = object : JsonObjectRequest(
 				Method.POST,
 				REST_BASE_URL + "GpsLocations",
@@ -153,6 +160,57 @@ class ApiUtils {
 			}
 			handler.addToRequestQueue(httpRequest)
 			
+		}
+		
+		fun createLocations(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, locations: Collection<LocationModel>, sessionId: String, jwt: String) {
+			val handler = WebApiSingletonHandler.getInstance(context)
+			val requestJsonParams = JSONArray()
+			for (location in locations) {
+				val item = JSONObject()
+				item.put("recordedAt", location.recordedAt.toString())
+				item.put("latitude", location.latitude)
+				item.put("longitude", location.longitude)
+				item.put("accuracy", location.accuracy)
+				item.put("altitude", location.altitude)
+				item.put("verticalAccuracy", location.verticalAccuracy)
+				item.put("gpsSessionId", sessionId)
+				item.put("gpsLocationTypeId", Utils.getLocationTypeStringBasedOnId(location.locationType))
+				requestJsonParams.put(item)
+			}
+			
+			val httpRequest = object : JsonRequest<JSONObject>(
+				Method.POST,
+				REST_BASE_URL + "GpsLocations",
+				requestJsonParams.toString(),
+				listener,
+				errorListener
+			) {
+				override fun getHeaders(): MutableMap<String, String> {
+					val headers = HashMap<String, String>()
+					for ((key, value) in super.getHeaders()) {
+						headers[key] = value
+					}
+					headers["Authorization"] = "Bearer $jwt"
+					return headers
+				}
+				
+				override fun parseNetworkResponse(response: NetworkResponse?): Response<JSONObject> {
+					return try {
+						val jsonString = String(
+							response!!.data,
+							Charset.forName(HttpHeaderParser.parseCharset(response.headers, PROTOCOL_CHARSET))
+						)
+						Response.success(
+							JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response)
+						)
+					} catch (e: UnsupportedEncodingException) {
+						Response.error(ParseError(e))
+					} catch (je: JSONException) {
+						Response.error(ParseError(je))
+					}
+				}
+			}
+			handler.addToRequestQueue(httpRequest)
 		}
 		
 		fun cancelAllRequests(context: Context) {
