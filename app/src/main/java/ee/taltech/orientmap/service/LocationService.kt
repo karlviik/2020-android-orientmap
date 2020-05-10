@@ -171,9 +171,7 @@ class LocationService : Service() {
 						val tempLocList = locationBuffer.toList()
 						locationBuffer = HashSet()
 						
-						for (location in tempLocList) {
-							pushLocationToApi(location, token, false)
-						}
+						pushLocationsToApi(tempLocList, token, false)
 					}
 				}
 				// else not logged in, can't do anything against that
@@ -186,20 +184,20 @@ class LocationService : Service() {
 		timer.schedule(timerTask, 0L, period)
 	}
 	
-	private fun pushLocationToApi(location: LocationModel, token: String, skipError: Boolean) {
-		if (location.isUploaded || sessionId == null) return
+	private fun pushLocationsToApi(locations: Collection<LocationModel>, token: String, skipError: Boolean) {
+		if (sessionId == null) return
 		val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
-			if (!location.isUploaded) {
+			for (location in locations) {
 				location.isUploaded = true
-				session.uploadedLocationCount += 1
-				sessionRepository.update(session)
 				locationRepository.update(location)
 			}
+			session.uploadedLocationCount += locations.size
+			sessionRepository.update(session)
 		}
 		val errorListener = Response.ErrorListener { _ ->
-			if (!skipError && !location.isUploaded) locationBuffer.add(location)
+			if (!skipError) locationBuffer.addAll(locations)
 		}
-		ApiUtils.createLocation(this@LocationService, listener, errorListener, location, sessionId!!, token)
+		ApiUtils.createLocations(this@LocationService, listener, errorListener, locations, sessionId!!, token)
 	}
 	
 	// 0 is loc, 1 wp, 2 cp
@@ -384,14 +382,26 @@ class LocationService : Service() {
 		mInstance = null
 		timer.cancel()
 		val token = PreferenceUtils.getToken(this)
+		
+		
 		if (token != null) {
-			for (location in locationBuffer) {
-				pushLocationToApi(location, token, true)
+			val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
+				for (location in locationBuffer) {
+					location.isUploaded = true
+					locationRepository.update(location)
+				}
+				session.uploadedLocationCount += locationBuffer.size
+				sessionRepository.update(session)
+				locationRepository.close()
+				sessionRepository.close()
 			}
+			val errorListener = Response.ErrorListener { _ ->
+				locationRepository.close()
+				sessionRepository.close()
+			}
+			ApiUtils.createLocations(this@LocationService, listener, errorListener, locationBuffer, sessionId!!, token)
 		}
 		
-		sessionRepository.close()
-		locationRepository.close()
 		
 		super.onDestroy()
 		
