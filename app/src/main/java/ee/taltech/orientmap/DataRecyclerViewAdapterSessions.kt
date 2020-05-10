@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -94,6 +95,11 @@ class DataRecyclerViewAdapterSessions(
 			val editTextSlow = dialogView.findViewById<View>(R.id.editTextSessionChangeSlowPace)!! as EditText
 			val button1: Button = dialogView.findViewById<View>(R.id.buttonSubmit)!! as Button
 			val button2: Button = dialogView.findViewById<View>(R.id.buttonCancel)!! as Button
+			
+			val fast = if (session.gradientFastTime != null) session.gradientFastTime.toString() else ""
+			val slow = if (session.gradientSlowTime != null) session.gradientSlowTime.toString() else ""
+			editTextFast.setText(fast, TextView.BufferType.EDITABLE)
+			editTextSlow.setText(slow, TextView.BufferType.EDITABLE)
 			
 			button2.setOnClickListener(View.OnClickListener { dialogBuilder.dismiss() })
 			button1.setOnClickListener(View.OnClickListener {
