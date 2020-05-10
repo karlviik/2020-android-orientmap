@@ -20,6 +20,7 @@ import ee.taltech.orientmap.activities.MainActivity
 import ee.taltech.orientmap.activities.SessionViewActivity
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
+import ee.taltech.orientmap.poko.LocationModel
 import ee.taltech.orientmap.poko.SessionModel
 import ee.taltech.orientmap.service.LocationService
 import ee.taltech.orientmap.utils.ApiUtils
@@ -126,10 +127,10 @@ class DataRecyclerViewAdapterSessions(
 				if (isOk) {
 					if (session.userEmail == PreferenceUtils.getUserEmail(context)) {
 						val token = PreferenceUtils.getToken(context)
-						val listener = Response.Listener<JSONObject> { response ->
+						val listener = Response.Listener<JSONObject> { _ ->
 							// eh, nothing to do really
 						}
-						val errorListener = Response.ErrorListener { e ->
+						val errorListener = Response.ErrorListener { _ ->
 							Toast.makeText(context, "Locally saved, but error sending the changes to backend", Toast.LENGTH_SHORT).show()
 						}
 						ApiUtils.updateSession(context, listener, errorListener, session, token!!)
@@ -198,20 +199,28 @@ class DataRecyclerViewAdapterSessions(
 				
 				val locationFunction = {
 					val allLocations = locationRepo.getSessionLocations(session.id)
+					val toUploadLocations = ArrayList<LocationModel>()
+					
 					for (location in allLocations) {
-						if (location.isUploaded) continue
+						if (!location.isUploaded) {
+							toUploadLocations.add(location)
+						}
+					}
+					
+					if (toUploadLocations.size != 0) {
 						val listener = Response.Listener<JSONObject> { _ ->
-							session.uploadedLocationCount += 1
+							session.uploadedLocationCount += toUploadLocations.size
 							sessionRepo.update(session)
-							location.isUploaded = true
-							locationRepo.update(location)
+							for (location in toUploadLocations) {
+								location.isUploaded = true
+								locationRepo.update(location)
+							}
 							notifyDataSetChanged()
 						}
 						val errorListener = Response.ErrorListener { _ ->
-							// this could get spammy potentially
-							Toast.makeText(context, "Error saving a location!", Toast.LENGTH_SHORT).show()
+							Toast.makeText(context, "Error saving locations to backend!", Toast.LENGTH_SHORT).show()
 						}
-						ApiUtils.createLocation(context, listener, errorListener, location, session.apiId, token)
+						ApiUtils.createLocations(context, listener, errorListener, toUploadLocations, session.apiId, token)
 					}
 				}
 				
