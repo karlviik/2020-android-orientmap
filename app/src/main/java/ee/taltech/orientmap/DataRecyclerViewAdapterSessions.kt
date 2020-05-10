@@ -20,6 +20,7 @@ import ee.taltech.orientmap.activities.SessionViewActivity
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.SessionModel
+import ee.taltech.orientmap.service.LocationService
 import ee.taltech.orientmap.utils.ApiUtils
 import ee.taltech.orientmap.utils.PreferenceUtils
 import ee.taltech.orientmap.utils.Utils
@@ -196,6 +197,8 @@ class DataRecyclerViewAdapterSessions(
 				}
 			}
 		}
+		
+		holder.itemView.buttonViewSession.isEnabled = !LocationService.isServiceCreated()
 		
 		val currentEmail = PreferenceUtils.getUserEmail(context)
 		// if isn't logged in or is with different user or item is fully synced, disable button
