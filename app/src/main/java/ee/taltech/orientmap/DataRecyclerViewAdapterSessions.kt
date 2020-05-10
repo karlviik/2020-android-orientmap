@@ -105,8 +105,8 @@ class DataRecyclerViewAdapterSessions(
 			button1.setOnClickListener(View.OnClickListener {
 				val newName: String = editText.text.toString()
 				if (!TextUtils.isEmpty(newName)) session.name = newName
-				val fastPace = editTextSlow.text.toString().toIntOrNull()
-				val slowPace = editTextFast.text.toString().toIntOrNull()
+				val fastPace = editTextFast.text.toString().toIntOrNull()
+				val slowPace = editTextSlow.text.toString().toIntOrNull()
 				var isOk = false
 				if (fastPace == null && slowPace == null) {
 					session.gradientFastTime = null
