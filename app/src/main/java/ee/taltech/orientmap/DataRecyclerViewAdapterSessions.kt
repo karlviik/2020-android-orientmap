@@ -129,11 +129,9 @@ class DataRecyclerViewAdapterSessions(
 						ApiUtils.updateSession(context, listener, errorListener, session, token!!)
 					}
 					sessionRepo.update(session)
+					notifyDataSetChanged()
+					dialogBuilder.dismiss()
 				}
-				
-				sessionRepo.update(session)
-				notifyDataSetChanged()
-				dialogBuilder.dismiss()
 			})
 			
 			dialogBuilder.setView(dialogView)
