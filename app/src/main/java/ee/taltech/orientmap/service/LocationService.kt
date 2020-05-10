@@ -151,13 +151,15 @@ class LocationService : Service() {
 		val timerTask = object : TimerTask() {
 			override fun run() {
 				if (PreferenceUtils.isLoggedIn(this@LocationService)) {
-					// get token first (if no token, return)
+					// get token first (if no token, return), also get user email
 					val token: String = PreferenceUtils.getToken(this@LocationService) ?: return
+					val email = PreferenceUtils.getUserEmail(this@LocationService) ?: return
 					if (sessionId == null) {
 						// if session hasn't been started
 						val listener: Response.Listener<JSONObject> = Response.Listener { response ->
 							sessionId = response.getString("id")
 							session.apiId = sessionId as String
+							session.userEmail = email
 							sessionRepository.update(session)
 						}
 						// Not much to do if error, just try again later
@@ -189,6 +191,8 @@ class LocationService : Service() {
 		val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
 			if (!location.isUploaded) {
 				location.isUploaded = true
+				session.uploadedLocationCount += 1
+				sessionRepository.update(session)
 				locationRepository.update(location)
 			}
 		}
@@ -203,6 +207,8 @@ class LocationService : Service() {
 		val locM = LocationModel(location, type, session.id)
 		locationRepository.add(locM)
 		locationBuffer.add(locM)
+		session.locationCount += 1
+		sessionRepository.update(session)
 	}
 	
 	private fun requestLocationUpdates() {
