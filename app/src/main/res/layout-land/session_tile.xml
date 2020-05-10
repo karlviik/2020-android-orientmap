@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:id="@+id/textViewSessionName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Session name"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@id/barrier2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewSessionTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Time when session was made"
+        app:layout_constraintEnd_toEndOf="@id/barrier2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionName" />
+
+    <Button
+        android:id="@+id/buttonViewSession"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
+        android:text="View"
+        app:layout_constraintBottom_toTopOf="@+id/buttonRenameSession"
+        app:layout_constraintEnd_toStartOf="@+id/buttonDeleteSession"
+        app:layout_constraintStart_toEndOf="@id/barrier2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/buttonDeleteSession"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="Delete"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSyncSession"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonViewSession"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/buttonRenameSession"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="8dp"
+        android:text="Rename"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSyncSession"
+        app:layout_constraintStart_toEndOf="@id/barrier2"
+        app:layout_constraintTop_toBottomOf="@+id/buttonViewSession" />
+
+    <TextView
+        android:id="@+id/textViewSessionTimePerKm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Time per km"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/textViewSessionDuration"
+        app:layout_constraintEnd_toStartOf="@+id/hackyTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionDistance" />
+
+    <TextView
+        android:id="@+id/textViewSessionDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Duration"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/hackyTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionTimePerKm" />
+
+    <TextView
+        android:id="@+id/textViewSessionDistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Distance"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/textViewSessionTimePerKm"
+        app:layout_constraintEnd_toStartOf="@+id/hackyTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionTime" />
+
+    <Button
+        android:id="@+id/buttonSyncSession"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="SYNC"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonRenameSession"
+        app:layout_constraintTop_toBottomOf="@+id/buttonDeleteSession" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="left"
+        app:constraint_referenced_ids="buttonViewSession,buttonDeleteSession,buttonRenameSession,buttonSyncSession"
+        tools:layout_editor_absoluteX="411dp" />
+
+    <TextView
+        android:id="@+id/textViewLocationCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="LocationCount"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/textViewSyncedLocationCount"
+        app:layout_constraintEnd_toStartOf="@+id/barrier2"
+        app:layout_constraintStart_toEndOf="@+id/hackyTextView"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionTime" />
+
+    <TextView
+        android:id="@+id/textViewSyncedLocationCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="SyncedLocationCount"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/textViewOwningUser"
+        app:layout_constraintEnd_toStartOf="@+id/barrier2"
+        app:layout_constraintStart_toEndOf="@+id/hackyTextView"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLocationCount" />
+
+    <TextView
+        android:id="@+id/textViewOwningUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="OwningUser"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/barrier2"
+        app:layout_constraintStart_toEndOf="@+id/hackyTextView"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSyncedLocationCount" />
+
+    <TextView
+        android:id="@+id/hackyTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/barrier2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
