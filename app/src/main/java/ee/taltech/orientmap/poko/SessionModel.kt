@@ -32,8 +32,8 @@ class SessionModel {
 		this.distance = distance
 		this.duration = duration
 		this.timePerKm = timePerKm
-		this.gradientFastTime = gradientFastTime
-		this.gradientSlowTime = gradientSlowTime
+		this.gradientFastTime = if (gradientFastTime == 0) null else gradientFastTime
+		this.gradientSlowTime = if (gradientSlowTime == 0) null else gradientSlowTime
 		this.locationCount = locationCount
 		this.uploadedLocationCount = uploadedLocationCount
 		this.userEmail = userEmail
