@@ -8,6 +8,7 @@ import org.threeten.bp.OffsetDateTime
 class LocationModel {
 	var id: Long = 0
 	var sessionId: Long = 0
+	var isUploaded: Boolean = false
 	
 	var recordedAt: LocalDateTime = LocalDateTime.now()
 	var latitude: Double = 0.0
@@ -32,7 +33,7 @@ class LocationModel {
 		this.locationType = locationType
 	}
 	
-	constructor(id: Long, sessionId: Long, recordedAt: LocalDateTime, latitude: Double, longitude: Double, accuracy: Float, altitude: Double, verticalAccuracy: Float, locationType: Int) {
+	constructor(id: Long, sessionId: Long, recordedAt: LocalDateTime, latitude: Double, longitude: Double, accuracy: Float, altitude: Double, verticalAccuracy: Float, locationType: Int, isUploaded: Boolean) {
 		this.id = id
 		this.sessionId = sessionId
 		this.recordedAt = recordedAt
@@ -42,6 +43,7 @@ class LocationModel {
 		this.altitude = altitude
 		this.verticalAccuracy = verticalAccuracy
 		this.locationType = locationType
+		this.isUploaded = isUploaded
 	}
 	
 	

@@ -13,7 +13,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 	
 	companion object {
 		const val DATABASE_NAME = "orientmap.db"
-		const val DATABASE_VERSION = 2
+		const val DATABASE_VERSION = 3
 		
 		const val SESSION_TABLE_NAME = "SESSIONS"
 		
@@ -54,6 +54,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 		const val LOCATION_ALTITUDE = "altitude"
 		const val LOCATION_VERTICAL_ACCURACY = "vertical_accuracy"
 		const val LOCATION_TYPE = "type"
+		const val LOCATION_IS_UPLOADED = "is_uploaded"
 		
 		const val SQL_LOCATION_CREATE_TABLE =
 			"create table $LOCATION_TABLE_NAME (" +
@@ -65,7 +66,8 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 					"$LOCATION_ACCURACY REAL NOT NULL, " +
 					"$LOCATION_ALTITUDE REAL NOT NULL, " +
 					"$LOCATION_VERTICAL_ACCURACY REAL NOT NULL, " +
-					"$LOCATION_TYPE INTEGER NOT NULL" +
+					"$LOCATION_TYPE INTEGER NOT NULL," +
+					"$LOCATION_IS_UPLOADED INTEGER NOT NULL" +
 					");"
 		
 		const val SQL_DELETE_LOCATION_TABLE = "DROP TABLE IF EXISTS $LOCATION_TABLE_NAME;"

@@ -35,7 +35,22 @@ class LocationRepository(val context: Context) {
 		contentValues.put(DbHelper.LOCATION_ALTITUDE, location.altitude)
 		contentValues.put(DbHelper.LOCATION_VERTICAL_ACCURACY, location.verticalAccuracy)
 		contentValues.put(DbHelper.LOCATION_TYPE, location.locationType)
+		contentValues.put(DbHelper.LOCATION_IS_UPLOADED, location.isUploaded)
 		location.id = db.insert(DbHelper.LOCATION_TABLE_NAME, null, contentValues)
+	}
+	
+	fun update(location: LocationModel) {
+		val contentValues = ContentValues()
+		contentValues.put(DbHelper.LOCATION_SESSION_ID, location.sessionId)
+		contentValues.put(DbHelper.LOCATION_RECORDED_AT, location.recordedAt.toEpochSecond(OffsetDateTime.now().offset) * 1000000000 + location.recordedAt.nano)
+		contentValues.put(DbHelper.LOCATION_LATITUDE, location.latitude)
+		contentValues.put(DbHelper.LOCATION_LONGITUDE, location.longitude)
+		contentValues.put(DbHelper.LOCATION_ACCURACY, location.accuracy)
+		contentValues.put(DbHelper.LOCATION_ALTITUDE, location.altitude)
+		contentValues.put(DbHelper.LOCATION_VERTICAL_ACCURACY, location.verticalAccuracy)
+		contentValues.put(DbHelper.LOCATION_TYPE, location.locationType)
+		contentValues.put(DbHelper.LOCATION_IS_UPLOADED, location.isUploaded)
+		db.update(DbHelper.LOCATION_TABLE_NAME, contentValues, DbHelper.LOCATION_ID + "=?", arrayOf(location.id.toString()))
 	}
 	
 	private fun fetch(sessionId: Long): Cursor {
@@ -48,7 +63,8 @@ class LocationRepository(val context: Context) {
 			DbHelper.LOCATION_ACCURACY,
 			DbHelper.LOCATION_ALTITUDE,
 			DbHelper.LOCATION_VERTICAL_ACCURACY,
-			DbHelper.LOCATION_TYPE
+			DbHelper.LOCATION_TYPE,
+			DbHelper.LOCATION_IS_UPLOADED
 		)
 		val orderBy = DbHelper.LOCATION_RECORDED_AT
 		return db.query(DbHelper.LOCATION_TABLE_NAME, columns, DbHelper.LOCATION_SESSION_ID + "=?", arrayOf(sessionId.toString()), null, null, orderBy)
@@ -69,7 +85,8 @@ class LocationRepository(val context: Context) {
 					cursor.getFloat(cursor.getColumnIndex(DbHelper.LOCATION_ACCURACY)),
 					cursor.getDouble(cursor.getColumnIndex(DbHelper.LOCATION_ALTITUDE)),
 					cursor.getFloat(cursor.getColumnIndex(DbHelper.LOCATION_VERTICAL_ACCURACY)),
-					cursor.getInt(cursor.getColumnIndex(DbHelper.LOCATION_TYPE))
+					cursor.getInt(cursor.getColumnIndex(DbHelper.LOCATION_TYPE)),
+					cursor.getInt(cursor.getColumnIndex(DbHelper.LOCATION_IS_UPLOADED)) > 0
 				)
 			)
 		}
