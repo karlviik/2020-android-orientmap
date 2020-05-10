@@ -14,12 +14,11 @@ class ApiUtils {
 	companion object {
 		private val TAG = this::class.java.declaringClass!!.simpleName
 		private const val REST_BASE_URL = "https://sportmap.akaver.com/api/v1.0/"
-		private var mJwt : String? = null
 		
 		fun createUser(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, firstName: String, lastName: String, email: String, password: String) {
 			Log.d(TAG, "createUser")
 			
-			var handler = WebApiSingletonHandler.getInstance(context)
+			val handler = WebApiSingletonHandler.getInstance(context)
 			val requestJsonParams = JSONObject()
 			
 			requestJsonParams.put("firstName", firstName)
@@ -27,7 +26,7 @@ class ApiUtils {
 			requestJsonParams.put("email", email)
 			requestJsonParams.put("password", password)
 			
-			var httpRequest = JsonObjectRequest(
+			val httpRequest = JsonObjectRequest(
 				Request.Method.POST,
 				REST_BASE_URL + "Account/Register",
 				requestJsonParams,
@@ -61,7 +60,7 @@ class ApiUtils {
 		fun createSession(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, session: SessionModel, jwt: String) {
 			Log.d(TAG, "createSession")
 			
-			var handler = WebApiSingletonHandler.getInstance(context)
+			val handler = WebApiSingletonHandler.getInstance(context)
 			val requestJsonParams = JSONObject()
 			
 			requestJsonParams.put("name", session.name)
@@ -71,8 +70,8 @@ class ApiUtils {
 			requestJsonParams.put("PaceMax", if (session.gradientSlowTime != null) session.gradientSlowTime else PreferenceUtils.getSlowSpeedTime(context))
 			
 			
-			var httpRequest = object : JsonObjectRequest(
-				Request.Method.POST,
+			val httpRequest = object : JsonObjectRequest(
+				Method.POST,
 				REST_BASE_URL + "GpsSessions",
 				requestJsonParams,
 				listener,
@@ -91,6 +90,35 @@ class ApiUtils {
 			
 		}
 		
+		fun updateSession(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, session: SessionModel, token: String) {
+			val handler = WebApiSingletonHandler.getInstance(context)
+			val requestJsonParams = JSONObject()
+			
+			requestJsonParams.put("name", session.name)
+			requestJsonParams.put("description", session.name)
+			requestJsonParams.put("recordedAt", session.start.toString())
+			requestJsonParams.put("PaceMin", if (session.gradientFastTime != null) session.gradientFastTime else PreferenceUtils.getFastSpeedTime(context))
+			requestJsonParams.put("PaceMax", if (session.gradientSlowTime != null) session.gradientSlowTime else PreferenceUtils.getSlowSpeedTime(context))
+			
+			
+			val httpRequest = object : JsonObjectRequest(
+				Method.PUT,
+				REST_BASE_URL + "GpsSessions/" + session.apiId,
+				requestJsonParams,
+				listener,
+				errorListener
+			) {
+				override fun getHeaders(): MutableMap<String, String> {
+					val headers = HashMap<String, String>()
+					for ((key, value) in super.getHeaders()) {
+						headers[key] = value
+					}
+					headers["Authorization"] = "Bearer $token"
+					return headers
+				}
+			}
+			handler.addToRequestQueue(httpRequest)
+		}
 		
 		fun createLocation(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, location: LocationModel, sessionId: String, jwt: String) {
 			Log.d(TAG, "createLocation")
@@ -108,7 +136,7 @@ class ApiUtils {
 			requestJsonParams.put("gpsLocationTypeId", Utils.getLocationTypeStringBasedOnId(location.locationType))
 			
 			val httpRequest = object : JsonObjectRequest(
-				Request.Method.POST,
+				Method.POST,
 				REST_BASE_URL + "GpsLocations",
 				requestJsonParams,
 				listener,

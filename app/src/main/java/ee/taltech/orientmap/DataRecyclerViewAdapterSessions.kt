@@ -90,13 +90,47 @@ class DataRecyclerViewAdapterSessions(
 			val dialogView: View = inflater.inflate(R.layout.edit_session_dialog, null)
 			
 			val editText = dialogView.findViewById<View>(R.id.edt_comment)!! as EditText
+			val editTextFast = dialogView.findViewById<View>(R.id.editTextSessionChangeFastPace)!! as EditText
+			val editTextSlow = dialogView.findViewById<View>(R.id.editTextSessionChangeSlowPace)!! as EditText
 			val button1: Button = dialogView.findViewById<View>(R.id.buttonSubmit)!! as Button
 			val button2: Button = dialogView.findViewById<View>(R.id.buttonCancel)!! as Button
 			
 			button2.setOnClickListener(View.OnClickListener { dialogBuilder.dismiss() })
-			button1.setOnClickListener(View.OnClickListener { // DO SOMETHINGS
+			button1.setOnClickListener(View.OnClickListener {
 				val newName: String = editText.text.toString()
-				session.name = newName
+				if (!TextUtils.isEmpty(newName)) session.name = newName
+				val fastPace = editTextSlow.text.toString().toIntOrNull()
+				val slowPace = editTextFast.text.toString().toIntOrNull()
+				var isOk = false
+				if (fastPace == null && slowPace == null) {
+					session.gradientFastTime = null
+					session.gradientSlowTime = null
+					isOk = true
+				} else if (fastPace == null && slowPace != null || fastPace != null && slowPace == null) {
+					Toast.makeText(context, "Either both fast and slow pace must be set or neither!", Toast.LENGTH_SHORT).show()
+				} else if (fastPace!! < 60) {
+					Toast.makeText(context, "Fast pace must be at least 60 seconds!", Toast.LENGTH_SHORT).show()
+				} else if (fastPace >= slowPace!!) {
+					Toast.makeText(context, "Fast pace can't be longer than slow pace!", Toast.LENGTH_SHORT).show()
+				} else {
+					session.gradientFastTime = fastPace
+					session.gradientSlowTime = slowPace
+					isOk = true
+				}
+				if (isOk) {
+					if (session.userEmail == PreferenceUtils.getUserEmail(context)) {
+						val token = PreferenceUtils.getToken(context)
+						val listener = Response.Listener<JSONObject> { response ->
+							// eh, nothing to do really
+						}
+						val errorListener = Response.ErrorListener { e ->
+							Toast.makeText(context, "Locally saved, but error sending the changes to backend", Toast.LENGTH_SHORT).show()
+						}
+						ApiUtils.updateSession(context, listener, errorListener, session, token!!)
+					}
+					sessionRepo.update(session)
+				}
+				
 				sessionRepo.update(session)
 				notifyDataSetChanged()
 				dialogBuilder.dismiss()
