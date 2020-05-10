@@ -177,10 +177,9 @@ class ApiUtils {
 				item.put("gpsLocationTypeId", Utils.getLocationTypeStringBasedOnId(location.locationType))
 				requestJsonParams.put(item)
 			}
-			
 			val httpRequest = object : JsonRequest<JSONObject>(
 				Method.POST,
-				REST_BASE_URL + "GpsLocations",
+				REST_BASE_URL + "GpsLocations/bulkupload/" + sessionId,
 				requestJsonParams.toString(),
 				listener,
 				errorListener
