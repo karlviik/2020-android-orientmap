@@ -24,6 +24,10 @@ class PreferenceUtils {
 			return getPreference(context).getString("userFirstName", null)
 		}
 		
+		fun getUserEmail(context: Context): String? {
+			return getPreference(context).getString("userEmail", null)
+		}
+		
 		fun getSlowSpeedTime(context: Context): Int {
 			return getPreference(context).getInt("slowSpeedTime", C.DEFAULT_SLOW_SPEED)
 		}
@@ -52,6 +56,10 @@ class PreferenceUtils {
 		
 		fun setUserFirstName(context: Context, name: String?): Boolean {
 			return getPreference(context).edit().putString("userFirstName", name).commit()
+		}
+		
+		fun setUserEmail(context: Context, name: String?): Boolean {
+			return getPreference(context).edit().putString("userEmail", name).commit()
 		}
 		
 		fun setSlowSpeedTime(context: Context, time: Int): Boolean {
