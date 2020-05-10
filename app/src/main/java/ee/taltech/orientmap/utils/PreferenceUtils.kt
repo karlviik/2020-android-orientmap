@@ -20,10 +20,6 @@ class PreferenceUtils {
 			return getPreference(context).getString("token", null)
 		}
 		
-		fun getUserFirstName(context: Context): String? {
-			return getPreference(context).getString("userFirstName", null)
-		}
-		
 		fun getUserEmail(context: Context): String? {
 			return getPreference(context).getString("userEmail", null)
 		}
@@ -52,10 +48,6 @@ class PreferenceUtils {
 		
 		fun setToken(context: Context, token: String?): Boolean {
 			return getPreference(context).edit().putString("token", token).commit()
-		}
-		
-		fun setUserFirstName(context: Context, name: String?): Boolean {
-			return getPreference(context).edit().putString("userFirstName", name).commit()
 		}
 		
 		fun setUserEmail(context: Context, name: String?): Boolean {
