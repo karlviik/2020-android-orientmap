@@ -1,8 +1,10 @@
 package ee.taltech.orientmap
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.location.Location
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +19,8 @@ import ee.taltech.orientmap.poko.SessionModel
 import ee.taltech.orientmap.utils.Utils
 import kotlinx.android.synthetic.main.session_tile.view.*
 import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.FormatStyle
 
 
 class DataRecyclerViewAdapterSessions(
@@ -46,15 +50,31 @@ class DataRecyclerViewAdapterSessions(
 	override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 		val session = dataSet[position]
 		holder.itemView.textViewSessionName.text = session.name
-		holder.itemView.textViewSessionTime.text = session.start.toString()
+		holder.itemView.textViewSessionTime.text = session.start.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT))
 		holder.itemView.textViewSessionDistance.text = String.format("Distance: %d meters", session.distance)
 		holder.itemView.textViewSessionDuration.text = String.format("Duration: %d:%d:%d", session.duration / 3600, session.duration % 3600 / 60, session.duration % 60)
 		holder.itemView.textViewSessionTimePerKm.text = String.format("Time per km: %d:%d", session.timePerKm / 60, session.timePerKm % 60)
+		holder.itemView.textViewLocationCount.text = String.format("Locations: %d", session.locationCount)
+		holder.itemView.textViewSyncedLocationCount.text = String.format("Synced locations: %d", session.uploadedLocationCount)
+		val ownerText = if (!TextUtils.isEmpty(session.userEmail)) session.userEmail else "none"
+		holder.itemView.textViewOwningUser.text = String.format("Account: %s", ownerText)
 		holder.itemView.buttonDeleteSession.setOnClickListener {
-			sessionRepo.delete(session)
-			locationRepo.deleteSessionLocations(session.id)
-			dataSet.removeAt(position)
-			notifyDataSetChanged()
+			val dialogClickListener = DialogInterface.OnClickListener { _, which ->
+				when (which) {
+					DialogInterface.BUTTON_POSITIVE -> {
+						sessionRepo.delete(session)
+						locationRepo.deleteSessionLocations(session.id)
+						dataSet.removeAt(position)
+						notifyDataSetChanged()
+						
+					}
+					DialogInterface.BUTTON_NEGATIVE -> {
+					}
+				}
+			}
+			val ab = AlertDialog.Builder(context)
+			ab.setMessage("Are you sure you want to delete the session?").setPositiveButton("Yes", dialogClickListener)
+				.setNegativeButton("No", dialogClickListener).show()
 		}
 		holder.itemView.buttonRenameSession.setOnClickListener {
 			val dialogBuilder: AlertDialog = AlertDialog.Builder(context).create()
