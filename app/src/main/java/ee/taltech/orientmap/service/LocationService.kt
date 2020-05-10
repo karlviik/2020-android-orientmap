@@ -14,17 +14,23 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.android.volley.Response
 import com.google.android.gms.location.*
 import ee.taltech.orientmap.C
 import ee.taltech.orientmap.R
-import ee.taltech.orientmap.utils.Utils
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.LocationModel
 import ee.taltech.orientmap.poko.SessionModel
+import ee.taltech.orientmap.utils.ApiUtils
 import ee.taltech.orientmap.utils.PreferenceUtils
+import ee.taltech.orientmap.utils.Utils
+import org.json.JSONObject
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.temporal.ChronoUnit
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 
 class LocationService : Service() {
@@ -53,8 +59,8 @@ class LocationService : Service() {
 		return true
 	}
 	
-	private val updateIntervalInMilliseconds: Long = PreferenceUtils.getGpsUpdateInterval(this)
-	private val fastestUpdateIntervalInMilliseconds = updateIntervalInMilliseconds / 2
+	private var updateIntervalInMilliseconds: Long? = null
+	private var fastestUpdateIntervalInMilliseconds: Long? = null
 	
 	private val broadcastReceiver = InnerBroadcastReceiver()
 	private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -92,10 +98,19 @@ class LocationService : Service() {
 	private lateinit var locationRepository: LocationRepository
 	private lateinit var session: SessionModel
 	
+	private var sessionId: String? = null
+	private var locationBuffer: HashSet<LocationModel> = HashSet()
+	
+	private lateinit var timer: Timer
+	private var syncInterval: Int? = null
+	
 	override fun onCreate() {
 		Log.d(TAG, "onCreate")
 		mInstance = this
 		super.onCreate()
+		syncInterval = PreferenceUtils.getDefaultSyncInterval(this)
+		updateIntervalInMilliseconds = PreferenceUtils.getGpsUpdateInterval(this@LocationService) * 1000L
+		fastestUpdateIntervalInMilliseconds = updateIntervalInMilliseconds!! / 2
 		
 		sessionRepository = SessionRepository(this).open()
 		locationRepository = LocationRepository(this).open()
@@ -132,12 +147,62 @@ class LocationService : Service() {
 		createLocationRequest()
 		requestLocationUpdates()
 		
+		// creates session and pushes to backend if can
+		val timerTask = object : TimerTask() {
+			override fun run() {
+				if (PreferenceUtils.isLoggedIn(this@LocationService)) {
+					// get token first (if no token, return)
+					val token: String = PreferenceUtils.getToken(this@LocationService) ?: return
+					if (sessionId == null) {
+						// if session hasn't been started
+						val listener: Response.Listener<JSONObject> = Response.Listener { response ->
+							sessionId = response.getString("id")
+							session.apiId = sessionId as String
+							sessionRepository.update(session)
+						}
+						// Not much to do if error, just try again later
+						val errorListener = Response.ErrorListener {}
+						ApiUtils.createSession(this@LocationService, listener, errorListener, session, token)
+					} else {
+						// session has been created in back-end, see if there are any locations in buffer waiting for push
+						// make to list and effectively remove them
+						val tempLocList = locationBuffer.toList()
+						locationBuffer = HashSet()
+						
+						for (location in tempLocList) {
+							pushLocationToApi(location, token, false)
+						}
+					}
+				}
+				// else not logged in, can't do anything against that
+			}
+		}
+		
+		timer = Timer()
+		// just make min 1s so no spam
+		val period = if (syncInterval!! <= 1) 1000L else syncInterval!! * 1000L
+		timer.schedule(timerTask, 0L, period)
+	}
+	
+	private fun pushLocationToApi(location: LocationModel, token: String, skipError: Boolean) {
+		if (location.isUploaded || sessionId == null) return
+		val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
+			if (!location.isUploaded) {
+				location.isUploaded = true
+				locationRepository.update(location)
+			}
+		}
+		val errorListener = Response.ErrorListener { _ ->
+			if (!skipError && !location.isUploaded) locationBuffer.add(location)
+		}
+		ApiUtils.createLocation(this@LocationService, listener, errorListener, location, sessionId!!, token)
 	}
 	
 	// 0 is loc, 1 wp, 2 cp
-	private fun addLocationToDb(location: Location, type: Int) {
+	private fun addLocationToDbAndBuffer(location: Location, type: Int) {
 		val locM = LocationModel(location, type, session.id)
 		locationRepository.add(locM)
+		locationBuffer.add(locM)
 	}
 	
 	private fun requestLocationUpdates() {
@@ -166,7 +231,7 @@ class LocationService : Service() {
 		}
 		
 		allLocations.add(location)
-		addLocationToDb(location, 0)
+		addLocationToDbAndBuffer(location, 0)
 		
 		if (currentLocation == null) {
 			locationStart = location
@@ -284,10 +349,10 @@ class LocationService : Service() {
 	}
 	
 	private fun createLocationRequest() {
-		mLocationRequest.interval = updateIntervalInMilliseconds
-		mLocationRequest.fastestInterval = fastestUpdateIntervalInMilliseconds
+		mLocationRequest.interval = updateIntervalInMilliseconds!!
+		mLocationRequest.fastestInterval = fastestUpdateIntervalInMilliseconds!!
 		mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-		mLocationRequest.maxWaitTime = updateIntervalInMilliseconds
+		mLocationRequest.maxWaitTime = updateIntervalInMilliseconds!!
 	}
 	
 	private fun getLastLocation() {
@@ -311,6 +376,13 @@ class LocationService : Service() {
 	override fun onDestroy() {
 		Log.d(TAG, "onDestroy")
 		mInstance = null
+		timer.cancel()
+		val token = PreferenceUtils.getToken(this)
+		if (token != null) {
+			for (location in locationBuffer) {
+				pushLocationToApi(location, token, true)
+			}
+		}
 		
 		sessionRepository.close()
 		locationRepository.close()
@@ -460,7 +532,7 @@ class LocationService : Service() {
 					distanceWpDirect = 0f
 					distanceWpTotal = 0f
 					wpStartTime = LocalDateTime.now()
-					addLocationToDb(currentLocation!!, 1)
+					addLocationToDbAndBuffer(currentLocation!!, 1)
 					showNotification()
 				}
 				C.WP_REMOVE -> {
@@ -478,7 +550,7 @@ class LocationService : Service() {
 						distanceCpDirect = 0f
 						distanceCpTotal = 0f
 						cpStartTime = LocalDateTime.now()
-						addLocationToDb(currentLocation!!, 2)
+						addLocationToDbAndBuffer(currentLocation!!, 2)
 						showNotification()
 					}
 				}

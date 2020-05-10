@@ -8,7 +8,7 @@ class C {
 		const val FAST_COLOR = Color.GREEN
 		const val DEFAULT_SLOW_SPEED = 600
 		const val DEFAULT_FAST_SPEED = 300
-		const val DEFAULT_GPS_UPDATE_INTERVAL_MILLISECONDS: Long = 2000
+		const val DEFAULT_GPS_UPDATE_INTERVAL_SECONDS = 2
 		const val DEFAULT_SYNC_INTERVAL_SECONDS = 0
 		
 		const val NOTIFICATION_CHANNEL = "default_channel"

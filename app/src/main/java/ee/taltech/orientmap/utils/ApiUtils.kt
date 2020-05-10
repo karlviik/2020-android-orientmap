@@ -58,7 +58,7 @@ class ApiUtils {
 			handler.addToRequestQueue(httpRequest)
 		}
 		
-		fun createSession(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, session: SessionModel) {
+		fun createSession(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, session: SessionModel, jwt: String) {
 			Log.d(TAG, "createSession")
 			
 			var handler = WebApiSingletonHandler.getInstance(context)
@@ -80,7 +80,7 @@ class ApiUtils {
 					for ((key, value) in super.getHeaders()) {
 						headers[key] = value
 					}
-					headers["Authorization"] = "Bearer $mJwt"
+					headers["Authorization"] = "Bearer $jwt"
 					return headers
 				}
 			}
@@ -89,7 +89,7 @@ class ApiUtils {
 		}
 		
 		
-		fun createLocation(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, location: LocationModel, sessionId: String) {
+		fun createLocation(context: Context, listener: Response.Listener<JSONObject>, errorListener: Response.ErrorListener, location: LocationModel, sessionId: String, jwt: String) {
 			Log.d(TAG, "createLocation")
 			
 			val handler = WebApiSingletonHandler.getInstance(context)
@@ -116,7 +116,7 @@ class ApiUtils {
 					for ((key, value) in super.getHeaders()) {
 						headers[key] = value
 					}
-					headers["Authorization"] = "Bearer $mJwt"
+					headers["Authorization"] = "Bearer $jwt"
 					return headers
 				}
 			}

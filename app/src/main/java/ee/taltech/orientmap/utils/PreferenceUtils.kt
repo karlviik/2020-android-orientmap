@@ -32,8 +32,8 @@ class PreferenceUtils {
 			return getPreference(context).getInt("fastSpeedTime", C.DEFAULT_FAST_SPEED)
 		}
 		
-		fun getGpsUpdateInterval(context: Context): Long {
-			return getPreference(context).getLong("gpsUpdateIntercal", C.DEFAULT_GPS_UPDATE_INTERVAL_MILLISECONDS)
+		fun getGpsUpdateInterval(context: Context): Int {
+			return getPreference(context).getInt("gpsUpdateIntercal", C.DEFAULT_GPS_UPDATE_INTERVAL_SECONDS)
 		}
 		
 		fun getDefaultSyncInterval(context: Context): Int {
@@ -62,8 +62,8 @@ class PreferenceUtils {
 			return getPreference(context).edit().putInt("fastSpeedTime", time).commit()
 		}
 		
-		fun setGpsUpdateInterval(context: Context, interval: Long): Boolean {
-			return getPreference(context).edit().putLong("gpsUpdateIntercal", interval).commit()
+		fun setGpsUpdateInterval(context: Context, interval: Int): Boolean {
+			return getPreference(context).edit().putInt("gpsUpdateIntercal", interval).commit()
 		}
 		
 		fun setDefaultSyncInterval(context: Context, interval: Int): Boolean {
