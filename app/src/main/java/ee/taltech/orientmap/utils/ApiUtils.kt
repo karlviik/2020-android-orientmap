@@ -67,6 +67,9 @@ class ApiUtils {
 			requestJsonParams.put("name", session.name)
 			requestJsonParams.put("description", session.name)
 			requestJsonParams.put("recordedAt", session.start.toString())
+			requestJsonParams.put("PaceMin", if (session.gradientFastTime != null) session.gradientFastTime else PreferenceUtils.getFastSpeedTime(context))
+			requestJsonParams.put("PaceMax", if (session.gradientSlowTime != null) session.gradientSlowTime else PreferenceUtils.getSlowSpeedTime(context))
+			
 			
 			var httpRequest = object : JsonObjectRequest(
 				Request.Method.POST,

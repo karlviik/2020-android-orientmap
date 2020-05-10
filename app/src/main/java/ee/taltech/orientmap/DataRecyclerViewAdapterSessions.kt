@@ -137,9 +137,12 @@ class DataRecyclerViewAdapterSessions(
 			
 			val colors = ArrayList<Int>()
 			
+			val fastTime = session.gradientFastTime ?: PreferenceUtils.getFastSpeedTime(context)
+			val slowTime = session.gradientSlowTime ?: PreferenceUtils.getSlowSpeedTime(context)
+			
 			for (i in 1 until lcs.size) {
 				colors.add(
-					Utils.getColorBasedOnGradient(lcs[i - 1], lcs[i], session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
+					Utils.getColorBasedOnGradient(lcs[i - 1], lcs[i], fastTime, slowTime, C.FAST_COLOR, C.SLOW_COLOR)
 				)
 			}
 			MainActivity.colors = colors

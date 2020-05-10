@@ -13,7 +13,7 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 	
 	companion object {
 		const val DATABASE_NAME = "orientmap.db"
-		const val DATABASE_VERSION = 4
+		const val DATABASE_VERSION = 5
 		
 		const val SESSION_TABLE_NAME = "SESSIONS"
 		
@@ -39,8 +39,8 @@ class DbHelper(context: Context) : SQLiteOpenHelper(
 					"$SESSION_DISTANCE INTEGER NOT NULL, " +
 					"$SESSION_DURATION INTEGER NOT NULL, " +
 					"$SESSION_TIME_PER_KM INTEGER NOT NULL, " +
-					"$SESSION_GRADIENT_SLOW_TIME INTEGER NOT NULL, " +
-					"$SESSION_GRADIENT_FAST_TIME INTEGER NOT NULL," +
+					"$SESSION_GRADIENT_SLOW_TIME INTEGER, " +
+					"$SESSION_GRADIENT_FAST_TIME INTEGER," +
 					"$SESSION_LOCATION_COUNT INTEGER NOT NULL, " +
 					"$SESSION_UPLOADED_LOCATION_COUNT INTEGER NOT NULL, " +
 					"$SESSION_USER_EMAIL TEXT NOT NULL" +

@@ -117,7 +117,7 @@ class LocationService : Service() {
 		
 		val slowTime = PreferenceUtils.getSlowSpeedTime(this)
 		val fastTime = PreferenceUtils.getFastSpeedTime(this)
-		session = SessionModel("", "Session", LocalDateTime.now(), fastTime, slowTime)
+		session = SessionModel("", "Session", LocalDateTime.now())
 		
 		sessionRepository.add(session)
 		
@@ -278,7 +278,7 @@ class LocationService : Service() {
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, prevLocation.longitude)
 			intent.putExtra(
 				C.LOCATION_UPDATE_ACTION_COLOR,
-				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
+				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, PreferenceUtils.getFastSpeedTime(this), PreferenceUtils.getSlowSpeedTime(this), C.FAST_COLOR, C.SLOW_COLOR)
 			)
 		}
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, hasLocation)
@@ -571,7 +571,7 @@ class LocationService : Service() {
 					val colors = ArrayList<Int>()
 					for (i in 1 until allLocations.size) {
 						colors.add(
-							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], session.gradientFastTime, session.gradientSlowTime, C.FAST_COLOR, C.SLOW_COLOR)
+							Utils.getColorBasedOnGradient(allLocations[i - 1], allLocations[i], PreferenceUtils.getFastSpeedTime(mInstance!!), PreferenceUtils.getSlowSpeedTime(mInstance!!), C.FAST_COLOR, C.SLOW_COLOR)
 						)
 					}
 					replyIntent.putExtra(C.GENERAL_COLORS, colors)
