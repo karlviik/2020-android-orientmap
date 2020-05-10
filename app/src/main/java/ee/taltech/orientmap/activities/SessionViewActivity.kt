@@ -1,8 +1,10 @@
-package ee.taltech.orientmap
+package ee.taltech.orientmap.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import ee.taltech.orientmap.DataRecyclerViewAdapterSessions
+import ee.taltech.orientmap.R
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import kotlinx.android.synthetic.main.activity_session_view.*

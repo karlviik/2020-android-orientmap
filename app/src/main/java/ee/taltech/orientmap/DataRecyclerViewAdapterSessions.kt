@@ -15,6 +15,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Response
+import ee.taltech.orientmap.activities.MainActivity
+import ee.taltech.orientmap.activities.SessionViewActivity
 import ee.taltech.orientmap.db.LocationRepository
 import ee.taltech.orientmap.db.SessionRepository
 import ee.taltech.orientmap.poko.SessionModel

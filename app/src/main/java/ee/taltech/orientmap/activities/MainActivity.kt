@@ -1,4 +1,4 @@
-package ee.taltech.orientmap
+package ee.taltech.orientmap.activities
 
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
@@ -35,6 +35,9 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.orientmap.BuildConfig
+import ee.taltech.orientmap.C
+import ee.taltech.orientmap.R
 import ee.taltech.orientmap.service.LocationService
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
