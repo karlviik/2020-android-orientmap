@@ -40,8 +40,8 @@ class LocationService : Service() {
 		
 		// maximum allowed distance jump between 2 consecutive location updates
 		private const val MAXIMUM_ALLOWED_DISTANCE_JUMP = 50
-		private const val MINIMUM_ALLOWED_DISTANCE_JUMP = 10
-		private const val MAXIMUM_ALLOWED_ACCURACY = 10f
+		private const val MINIMUM_ALLOWED_DISTANCE_JUMP = 5
+		private const val MAXIMUM_ALLOWED_ACCURACY = 20f
 		
 		// The desired intervals for location updates. Inexact. Updates may be more or less frequent.
 		
