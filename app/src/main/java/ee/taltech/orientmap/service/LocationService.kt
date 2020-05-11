@@ -584,7 +584,7 @@ class LocationService : Service() {
 				}
 				C.REQUEST_POINTS_LOCATIONS -> {
 					val replyIntent = Intent(C.REPLY_POINTS_LOCATIONS)
-					val tempAllLocations = allLocations.toTypedArray()
+					val tempAllLocations: ArrayList<Location> = allLocations
 					replyIntent.putExtra(C.GENERAL_LOCATIONS, tempAllLocations)
 					val colors = ArrayList<Int>()
 					for (i in 1 until tempAllLocations.size) {

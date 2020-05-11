@@ -89,6 +89,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	private var lastMagnetometerSet = false
 	//// end of compass related vars
 	
+	private var moveMapCam = false
+	private var moveMapTarget: LatLng? = null
+	
 	companion object {
 		// tag for logging
 		private val TAG = this::class.java.declaringClass!!.simpleName
@@ -137,6 +140,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		if (cameraPos != null) {
 			mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos))
 			cameraPos = null
+		}
+		
+		if (moveMapCam) {
+			moveMapCam = false
+			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(moveMapTarget, 16f))
 		}
 		
 		potentiallyDrawLines()
@@ -598,6 +606,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			when (intent.action) {
 				C.LOCATION_UPDATE_ACTION -> {
 					if (intent.getBooleanExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, false)) {
+						var moveCam = false
+						if (curPos == null) moveCam = true
 						curPos = LatLng(
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
@@ -606,6 +616,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, 0.0),
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, 0.0)
 						)
+						if (moveCam && ::mMap.isInitialized) {
+							moveMapCam = false
+							mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curPos, 16f))
+						}
 						if (lcs == null) {
 							lcs = ArrayList()
 							val loc = Location("")
@@ -666,7 +680,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				C.REPLY_POINTS_LOCATIONS -> {
 					val locations = intent.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)
 					val colors = intent.getIntegerArrayListExtra(C.GENERAL_COLORS)
+					if (::mMap.isInitialized) {
+						moveMapCam = false
+						mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(locations!![locations.size - 1].latitude, locations[locations.size - 1].longitude), 16f))
+					}
 					if (colors != null && locations != null) {
+						Log.d(TAG, colors.toString())
 						addAllPolyLines(locations, colors)
 					}
 				}
