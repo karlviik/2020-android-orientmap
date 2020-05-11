@@ -666,7 +666,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				C.REPLY_POINTS_LOCATIONS -> {
 					val locations = intent.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)
 					val colors = intent.getIntegerArrayListExtra(C.GENERAL_COLORS)
-					addAllPolyLines(locations!!, colors!!)
+					if (colors != null && locations != null) {
+						addAllPolyLines(locations, colors)
+					}
 				}
 				C.CLEAR_MAP -> {
 					if (!locationServiceActive) {
