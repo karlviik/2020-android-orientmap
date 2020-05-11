@@ -562,6 +562,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	fun buttonClear(view: View) {
+		draw = false
 		if (!locationServiceActive) {
 			mMap.clear()
 			textViewStart1.text = resources.getString(R.string.defaultString)
