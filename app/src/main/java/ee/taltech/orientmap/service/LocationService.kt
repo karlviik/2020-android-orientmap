@@ -227,6 +227,121 @@ class LocationService : Service() {
 		}
 	}
 	
+	private fun createStringsForSessionStatistics(): Map<String, String> {
+		val strings = HashMap<String, String>()
+		
+		val now = LocalDateTime.now()
+		
+		var overallDistance = ""
+		var overallTime = ""
+		var overallTempo = ""
+		
+		if (locationStart != null) {
+			val hoursFromStart: Int = ChronoUnit.HOURS.between(overallStartTime, now).toInt()
+			val minutesFromStart: Int = ChronoUnit.MINUTES.between(overallStartTime, now).toInt() % 60
+			val secondsFromStart: Int = ChronoUnit.SECONDS.between(overallStartTime, now).toInt() % 60
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(overallStartTime, now) / 60.0
+			var minutesPerKm = onlyMinutesFromStart / (distanceOverallTotal / 1000)
+			val hoursPerKm: Int = minutesPerKm.toInt() / 60
+			minutesPerKm -= 60 * hoursPerKm
+			
+			overallDistance = "%d".format(distanceOverallTotal.toInt())
+			
+			if (hoursFromStart > 0) {
+				overallTime = "%d:%02d:%02d".format(hoursFromStart, minutesFromStart, secondsFromStart)
+			} else {
+				overallTime = "%d:%02d".format(minutesFromStart, secondsFromStart)
+			}
+			
+			if (hoursPerKm > 0) {
+				if (hoursPerKm > 50) {
+					overallTempo = ">50h"
+				} else {
+					overallTempo = "%d:%02d:%02d".format(hoursPerKm, minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+				}
+			} else {
+				overallTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+			}
+			
+		} else {
+			overallDistance = "-----"
+			overallTime = "-----"
+			overallTempo = "-----"
+		}
+		
+		strings["overallDistance"] = overallDistance
+		strings["overallTime"] = overallTime
+		strings["overallTempo"] = overallTempo
+		
+		var wpDistance = ""
+		var wpDirect = ""
+		var wpTempo = ""
+		
+		if (isWpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
+			var minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
+			val hoursPerKm: Int = minutesPerKm.toInt() / 60
+			minutesPerKm -= 60 * hoursPerKm
+			
+			wpDistance = "%d".format(distanceWpTotal.toInt())
+			wpDirect = "%d".format(distanceWpDirect.toInt())
+			
+			if (hoursPerKm > 0) {
+				if (hoursPerKm > 50) {
+					wpTempo = ">50h"
+				} else {
+					wpTempo = "%d:%02d:%02d".format(hoursPerKm, minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+				}
+			} else {
+				wpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+			}
+			
+		} else {
+			wpDistance = "-----"
+			wpDirect = "-----"
+			wpTempo = "-----"
+		}
+		
+		strings["wpDistance"] = wpDistance
+		strings["wpDirect"] = wpDirect
+		strings["wpTempo"] = wpTempo
+		
+		
+		var cpDistance = ""
+		var cpDirect = ""
+		var cpTempo = ""
+		
+		if (isCpSet) {
+			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
+			var minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
+			val hoursPerKm: Int = minutesPerKm.toInt() / 60
+			minutesPerKm -= 60 * hoursPerKm
+			
+			cpDistance = "%d".format(distanceCpTotal.toInt())
+			cpDirect = "%d".format(distanceCpDirect.toInt())
+			if (hoursPerKm > 0) {
+				if (hoursPerKm > 50) {
+					cpTempo = ">50h"
+				} else {
+					cpTempo = "%d:%02d:%02d".format(hoursPerKm, minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+				}
+			} else {
+				cpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
+			}
+		} else {
+			cpDistance = "-----"
+			cpDirect = "-----"
+			cpTempo = "-----"
+		}
+		
+		strings["cpDistance"] = cpDistance
+		strings["cpDirect"] = cpDirect
+		strings["cpTempo"] = cpTempo
+		
+		return strings
+		
+	}
+	
 	private fun onNewLocation(location: Location) {
 		Log.i(TAG, "New location: $location")
 		
@@ -289,71 +404,20 @@ class LocationService : Service() {
 		intent.putExtra(C.LOCATION_UPDATE_ACTION_HAS_LOCATION, hasLocation)
 		
 		intent.putExtra(C.LOCATION_UPDATE_MOVEMENT_BEARING, prevLocation?.bearingTo(currentLocation))
-		val now = LocalDateTime.now()
 		
-		var overallDistance = ""
-		var overallTime = ""
-		var overallTempo = ""
+		val map = createStringsForSessionStatistics()
 		
-		if (locationStart != null) {
-			val hoursFromStart: Int = ChronoUnit.HOURS.between(overallStartTime, now).toInt()
-			val minutesFromStart: Int = ChronoUnit.MINUTES.between(overallStartTime, now).toInt() % 60
-			val secondsFromStart: Int = ChronoUnit.SECONDS.between(overallStartTime, now).toInt() % 60
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(overallStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceOverallTotal / 1000)
-			
-			overallDistance = "%.1f".format(distanceOverallTotal)
-			overallTime = "%d:%02d:%02d".format(hoursFromStart, minutesFromStart, secondsFromStart)
-			overallTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
-		} else {
-			overallDistance = "-----"
-			overallTime = "-----"
-			overallTempo = "-----"
-		}
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE, map["overallDistance"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE, map["overallTempo"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME, map["overallTime"])
 		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_DISTANCE, overallDistance)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_PACE, overallTempo)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALL_TIME, overallTime)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE, map["wpDirect"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE, map["wpDistance"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_PACE, map["wpTempo"])
 		
-		var wpDistance = ""
-		var wpDirect = ""
-		var wpTempo = ""
-		
-		if (isWpSet) {
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
-			wpDistance = "%.1f".format(distanceWpTotal)
-			wpDirect = "%.1f".format(distanceWpDirect)
-			wpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
-		} else {
-			wpDistance = "-----"
-			wpDirect = "-----"
-			wpTempo = "-----"
-		}
-		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_DIRECT_DISTANCE, wpDirect)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_TOTAL_DISTANCE, wpDistance)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_WP_PACE, wpTempo)
-		
-		var cpDistance = ""
-		var cpDirect = ""
-		var cpTempo = ""
-		
-		if (isCpSet) {
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
-			cpDistance = "%.1f".format(distanceCpTotal)
-			cpDirect = "%.1f".format(distanceCpDirect)
-			cpTempo = "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60)
-		} else {
-			cpDistance = "-----"
-			cpDirect = "-----"
-			cpTempo = "-----"
-		}
-		
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE, cpDirect)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE, cpDistance)
-		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_PACE, cpTempo)
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_DIRECT_DISTANCE, map["cpDirect"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_TOTAL_DISTANCE, map["cpDistance"])
+		intent.putExtra(C.LOCATION_UPDATE_ACTION_CP_PACE, map["cpTempo"])
 		
 		LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 		
@@ -486,50 +550,19 @@ class LocationService : Service() {
 		notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
 		notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
 		
-		val now = LocalDateTime.now()
+		val map = createStringsForSessionStatistics()
 		
-		if (locationStart != null) {
-			val hoursFromStart: Int = ChronoUnit.HOURS.between(overallStartTime, now).toInt()
-			val minutesFromStart: Int = ChronoUnit.MINUTES.between(overallStartTime, now).toInt() % 60
-			val secondsFromStart: Int = ChronoUnit.SECONDS.between(overallStartTime, now).toInt() % 60
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(overallStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceOverallTotal / 1000)
-			
-			notifyview.setTextViewText(R.id.textViewOverallTotal, "%.1f".format(distanceOverallTotal))
-			notifyview.setTextViewText(R.id.textViewOverallTime, "%d:%02d:%02d".format(hoursFromStart, minutesFromStart, secondsFromStart))
-			notifyview.setTextViewText(R.id.textViewOverallTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
-		} else {
-			notifyview.setTextViewText(R.id.textViewOverallTotal, "-----")
-			notifyview.setTextViewText(R.id.textViewOverallTime, "-----")
-			notifyview.setTextViewText(R.id.textViewOverallTempo, "-----")
-		}
+		notifyview.setTextViewText(R.id.textViewOverallTotal, map["overallDistance"])
+		notifyview.setTextViewText(R.id.textViewOverallTime, map["overallTime"])
+		notifyview.setTextViewText(R.id.textViewOverallTempo, map["overallTempo"])
 		
+		notifyview.setTextViewText(R.id.textViewWPTotal, map["wpDistance"])
+		notifyview.setTextViewText(R.id.textViewWPDirect, map["wpDirect"])
+		notifyview.setTextViewText(R.id.textViewWPTempo, map["wpTempo"])
 		
-		if (isWpSet) {
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(wpStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceWpTotal / 1000)
-			
-			notifyview.setTextViewText(R.id.textViewWPTotal, "%.1f".format(distanceWpTotal))
-			notifyview.setTextViewText(R.id.textViewWPDirect, "%.1f".format(distanceWpDirect))
-			notifyview.setTextViewText(R.id.textViewWPTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
-		} else {
-			notifyview.setTextViewText(R.id.textViewWPTotal, "-----")
-			notifyview.setTextViewText(R.id.textViewWPDirect, "-----")
-			notifyview.setTextViewText(R.id.textViewWPTempo, "-----")
-		}
-		
-		if (isCpSet) {
-			val onlyMinutesFromStart = ChronoUnit.SECONDS.between(cpStartTime, now) / 60.0
-			val minutesPerKm = onlyMinutesFromStart / (distanceCpTotal / 1000)
-			
-			notifyview.setTextViewText(R.id.textViewCPTotal, "%.1f".format(distanceCpTotal))
-			notifyview.setTextViewText(R.id.textViewCPDirect, "%.1f".format(distanceCpDirect))
-			notifyview.setTextViewText(R.id.textViewCPTempo, "%d:%02d".format(minutesPerKm.toInt(), (minutesPerKm * 60).toInt() % 60))
-		} else {
-			notifyview.setTextViewText(R.id.textViewCPTotal, "-----")
-			notifyview.setTextViewText(R.id.textViewCPDirect, "-----")
-			notifyview.setTextViewText(R.id.textViewCPTempo, "-----")
-		}
+		notifyview.setTextViewText(R.id.textViewCPTotal, map["cpDistance"])
+		notifyview.setTextViewText(R.id.textViewCPDirect, map["cpDirect"])
+		notifyview.setTextViewText(R.id.textViewCPTempo, map["cpTempo"])
 		
 		// construct and show notification
 		val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
@@ -556,7 +589,11 @@ class LocationService : Service() {
 					distanceWpDirect = 0f
 					distanceWpTotal = 0f
 					wpStartTime = LocalDateTime.now()
-					addLocationToDbAndBuffer(currentLocation!!, 1)
+					try {
+						addLocationToDbAndBuffer(currentLocation!!, 1)
+					} catch (e: Exception) {
+						// some weird stuff is happening
+					}
 					showNotification()
 				}
 				C.WP_REMOVE -> {
