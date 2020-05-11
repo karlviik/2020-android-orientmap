@@ -390,24 +390,25 @@ class LocationService : Service() {
 		timer.cancel()
 		val token = PreferenceUtils.getToken(this)
 		
-		
-		if (token != null) {
-			val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
-				for (location in locationBuffer) {
-					location.isUploaded = true
-					locationRepository.update(location)
+		try {
+			if (token != null) {
+				val listener: Response.Listener<JSONObject> = Response.Listener { _ ->
+					for (location in locationBuffer) {
+						location.isUploaded = true
+						locationRepository.update(location)
+					}
+					session.uploadedLocationCount += locationBuffer.size
+					sessionRepository.update(session)
+					locationRepository.close()
+					sessionRepository.close()
 				}
-				session.uploadedLocationCount += locationBuffer.size
-				sessionRepository.update(session)
-				locationRepository.close()
-				sessionRepository.close()
+				val errorListener = Response.ErrorListener { _ ->
+					locationRepository.close()
+					sessionRepository.close()
+				}
+				ApiUtils.createLocations(this@LocationService, listener, errorListener, locationBuffer, sessionId!!, token)
 			}
-			val errorListener = Response.ErrorListener { _ ->
-				locationRepository.close()
-				sessionRepository.close()
-			}
-			ApiUtils.createLocations(this@LocationService, listener, errorListener, locationBuffer, sessionId!!, token)
-		}
+		} catch (e: Exception) {}
 		
 		
 		super.onDestroy()
