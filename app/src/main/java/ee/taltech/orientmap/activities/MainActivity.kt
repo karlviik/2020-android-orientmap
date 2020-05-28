@@ -525,6 +525,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			// stopping the service
 			stopService(Intent(this, LocationService::class.java))
 			
+			val fileName = LocalDateTime.now().toString() + ".gpx"
+			val file = this.getExternalFilesDir(null)
+			Log.d(TAG, file!!.absolutePath)
+			val gpxFile = File(file, fileName)
+			val writer = FileWriter(gpxFile)
+			val lcstemp: List<Location> = if (lcs == null) ArrayList() else lcs!!
+			val cpstemp: List<Location> = if (cps == null) ArrayList() else cps!!
+			writer.append(Utils.generateGfx(lcstemp, cpstemp))
+			writer.flush()
+			writer.close()
+			
 			buttonTrack.text = resources.getString(R.string.trackStart)
 		} else {
 			if (checkPermissions()) {

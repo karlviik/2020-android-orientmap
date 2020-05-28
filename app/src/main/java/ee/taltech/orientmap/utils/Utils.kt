@@ -2,6 +2,9 @@ package ee.taltech.orientmap.utils
 
 import android.location.Location
 import ee.taltech.orientmap.C
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
 import kotlin.math.abs
 
 class Utils {
@@ -46,11 +49,33 @@ class Utils {
 		}
 		
 		fun getLocationTypeStringBasedOnId(int: Int): String {
-			return when(int) {
+			return when (int) {
 				1 -> C.API_WP_ID
 				2 -> C.API_CP_ID
 				else -> C.API_LOCATION_ID
 			}
+		}
+		
+		fun generateGfx(locs: List<Location>, cps: List<Location>): String {
+			var total = ""
+			total += "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx version=\"1.1\">" // header
+			total += "<name>OrientMap track</name>" // name ish
+			var i = 1
+			for (cp in cps) {
+				total += "<wpt lat=\"" + cp.latitude.toString() + "\" lon=\"" + cp.longitude.toString() + "\">" +
+						"<ele>" + cp.altitude.toString() + "</ele>" +
+						"<name>CP " + i++ + "</name>" +
+						"</wpt>"
+			}
+			total += "<trk><name>kaviik</name><number>1</number><trkseg>"
+			for (loc in locs) {
+				total += "<trkpt lat=\"" + loc.latitude.toString() + "\" lon=\"" + loc.longitude.toString() + "\">" +
+						"<ele>" + loc.altitude.toString() + "</ele>" +
+						"<time>" + Instant.ofEpochMilli(loc.time).atZone(ZoneId.systemDefault()).toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "</time>" +
+						"</trkpt>"
+			}
+			total += "</trkseg></trk></gpx>"
+			return total
 		}
 	}
 }
