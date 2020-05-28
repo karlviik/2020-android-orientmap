@@ -35,7 +35,11 @@ class C {
 		
 		const val LOCATION_UPDATE_ACTION_HAS_LOCATION = "ee.taltech.kaviik.orientmap.location_update.has_location"
 		const val LOCATION_UPDATE_ACTION_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.latitude"
+		const val LOCATION_UPDATE_ACTION_TIME = "ee.taltech.kaviik.orientmap.location_update.time"
+		const val LOCATION_UPDATE_ACTION_ALTITUDE = "ee.taltech.kaviik.orientmap.location_update.altitude"
 		const val LOCATION_UPDATE_ACTION_PREV_LATITUDE = "ee.taltech.kaviik.orientmap.location_update.prev_latitude"
+		const val LOCATION_UPDATE_ACTION_PREV_TIME = "ee.taltech.kaviik.orientmap.location_update.prev_time"
+		const val LOCATION_UPDATE_ACTION_PREV_ALTITUDE = "ee.taltech.kaviik.orientmap.location_update.prev_altitude"
 		const val LOCATION_UPDATE_ACTION_LONGITUDE = "ee.taltech.kaviik.orientmap.location_update.longitude"
 		const val LOCATION_UPDATE_ACTION_PREV_LONGITUDE = "ee.taltech.kaviik.orientmap.location_update.prev_longitude"
 		const val LOCATION_UPDATE_ACTION_COLOR = "ee.taltech.kaviik.orientmap.location_update.color"

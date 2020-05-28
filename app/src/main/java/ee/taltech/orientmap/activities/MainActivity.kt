@@ -3,6 +3,8 @@ package ee.taltech.orientmap.activities
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
 import android.Manifest
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -42,8 +44,12 @@ import ee.taltech.orientmap.BuildConfig
 import ee.taltech.orientmap.C
 import ee.taltech.orientmap.R
 import ee.taltech.orientmap.service.LocationService
+import ee.taltech.orientmap.utils.Utils
 import kotlinx.android.synthetic.main.map_general_control.*
 import kotlinx.android.synthetic.main.map_track_control.*
+import org.threeten.bp.LocalDateTime
+import java.io.File
+import java.io.FileWriter
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -71,11 +77,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// rotation mode, 0 free to rota, 1 northbound, 2 selfbound
 	private var rotationLock = 0
 	
-	// something to use on map
-	private var waitingForMap = true
-	private var tempWp: LatLng? = null
-	private var tempWpInit = false
-	
 	//// compass related vars
 	private lateinit var sensorManager: SensorManager
 	private lateinit var compass: ImageView
@@ -92,6 +93,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	private var moveMapCam = false
 	private var moveMapTarget: LatLng? = null
 	
+	// something to use on map
+	private var waitingForMap = true
+	
+	private var mapInitializeCps: Boolean = false
+	private var mapInitializeCpsList: ArrayList<LatLng>? = null
+	
+	private var mapInitializePolylines: Boolean = false
+	private var mapInitializePolylinesList: ArrayList<ArrayList<Any>>? = null
+	
+	private var mapInitializeServiceStart: Boolean = false
+	
+	private var mapInitializeClear: Boolean = false
+	
+	private var mapInitializeWp = false
+	private var mapInitializeWpLatLng: LatLng? = null
+	
+	
 	companion object {
 		// tag for logging
 		private val TAG = this::class.java.declaringClass!!.simpleName
@@ -99,7 +117,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		// TODO: probably doesn't survive onDestroy
 		private var wp: Marker? = null
 		
-		public var lcs : ArrayList<Location>? = null
+		public var lcs: ArrayList<Location>? = null
 		public var cps: ArrayList<Location>? = null
 		public var colors: ArrayList<Int>? = null
 		public var draw: Boolean = false
@@ -132,9 +150,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			changeRotationLock()
 		}
 		
-		if (tempWpInit) {
-			tempWpInit = false
-			addWp(tempWp!!)
+		if (mapInitializeWp) {
+			mapInitializeWp = false
+			addWp(mapInitializeWpLatLng!!)
 		}
 		
 		if (cameraPos != null) {
@@ -147,11 +165,48 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(moveMapTarget, 16f))
 		}
 		
+		if (mapInitializeCps) {
+			mapInitializeCps = false
+			if (mapInitializeCpsList != null) {
+				for (cpLocation in mapInitializeCpsList!!) {
+					addCp(cpLocation, false)
+				}
+				mapInitializeCpsList = null
+			}
+		}
+		
+		if (mapInitializePolylines) {
+			mapInitializePolylines = false
+			if (mapInitializePolylinesList != null) {
+				for (polyLineTuple in mapInitializePolylinesList!!) {
+					addPolyLine(polyLineTuple[0] as LatLng, polyLineTuple[1] as LatLng, polyLineTuple[2] as Int)
+				}
+				mapInitializePolylinesList = null
+			}
+		}
+		
+		if (mapInitializeServiceStart) {
+			mMap.isMyLocationEnabled = true
+			mMap.clear()
+			mapInitializeServiceStart = false
+		}
+		
+		if (mapInitializeClear) {
+			mMap.clear()
+			mapInitializeClear = false
+		}
+		
+		
 		potentiallyDrawLines()
 	}
 	
 	private fun addWp(loc: LatLng) {
-		wp = mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+		if (::mMap.isInitialized) {
+			wp = mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_arrow_downward_black_36)))
+		} else {
+			mapInitializeWp = true
+			mapInitializeWpLatLng = loc
+		}
 	}
 	
 	private fun addCp(loc: LatLng, toArray: Boolean) {
@@ -162,17 +217,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			location.longitude = loc.longitude
 			cps!!.add(location)
 		}
-		mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
+		if (::mMap.isInitialized) {
+			mMap.addMarker(MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_beenhere_black_36)))
+		} else {
+			mapInitializeCps = true
+			if (mapInitializeCpsList == null) {
+				mapInitializeCpsList = ArrayList()
+			}
+			mapInitializeCpsList!!.add(loc)
+		}
 	}
 	
 	private fun addPolyLine(loc1: LatLng, loc2: LatLng, color: Int) {
-		val newLine = mMap.addPolyline(PolylineOptions().width(10F).color(color))
-		Log.d(TAG, "hello I am adding a polyline I hope")
-		newLine.points = listOf(loc1, loc2)
-		polylines.add(newLine)
+		if (::mMap.isInitialized) {
+			val newLine = mMap.addPolyline(PolylineOptions().width(10F).color(color))
+			Log.d(TAG, "hello I am adding a polyline I hope")
+			newLine.points = listOf(loc1, loc2)
+			polylines.add(newLine)
+		} else {
+			mapInitializePolylines = true
+			if (mapInitializePolylinesList == null) {
+				mapInitializePolylinesList = ArrayList()
+			}
+			mapInitializePolylinesList!!.add(arrayListOf(loc1, loc2, color))
+		}
 	}
 	
 	private fun addAllPolyLines(locations: List<Location>, colors: List<Int>) {
+		if (locations.isEmpty()) return
 		var loc1 = locations[0]
 		for (i in 1 until locations.size) {
 			val loc2 = locations[i]
@@ -231,7 +303,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		broadcastReceiverIntentFilter.addAction(C.CLEAR_MAP)
 		
 		
-		
 		// some compass things
 		compass = findViewById(R.id.imageViewCompass)
 		sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -268,13 +339,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		rotationLock = savedInstanceState.getInt("rotationLock")
 		
 		
-		val cam : CameraPosition? = savedInstanceState.getParcelable("cameraPosition")
+		val cam: CameraPosition? = savedInstanceState.getParcelable("cameraPosition")
 		if (::mMap.isInitialized) {
 			changeMapCenter()
 			changeRotationLock()
 			mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cam))
-		} else {
-			cameraPos = cam!!
+		} else if (cam != null) {
+			cameraPos = cam
 			waitingForMap = true
 		}
 		
@@ -318,7 +389,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 		}
 		
 		// current camera location
-		outState.putParcelable("cameraPosition", mMap.cameraPosition)
+		if (::mMap.isInitialized) {
+			outState.putParcelable("cameraPosition", mMap.cameraPosition)
+		}
 		
 		// compassEnabled = false
 		outState.putBoolean("compassEnabled", compassEnabled)
@@ -383,6 +456,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// ============================================== PERMISSION HANDLING =============================================
 	// Returns the current state of the permissions needed.
 	private fun checkPermissions(): Boolean {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			requestPermissions(arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE), 1)
+		}
 		return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
 			this,
 			Manifest.permission.ACCESS_FINE_LOCATION
@@ -464,6 +540,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	// ============================================== MAP CHANGERS =============================================
 	
 	private fun changeMapCenter() {
+		if (!::mMap.isInitialized) return
 		val colour: Int
 		if (movementCentered) {
 			colour = R.color.colorSelf
@@ -489,6 +566,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	}
 	
 	private fun changeRotationLock() {
+		if (!::mMap.isInitialized) return
 		var colour = 0
 		when (rotationLock) {
 			0 -> {
@@ -539,8 +617,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 			buttonTrack.text = resources.getString(R.string.trackStart)
 		} else {
 			if (checkPermissions()) {
-				mMap.isMyLocationEnabled = true
-				mMap.clear()
+				if (::mMap.isInitialized) {
+					mMap.isMyLocationEnabled = true
+					mMap.clear()
+				} else {
+					mapInitializeServiceStart = true
+				}
 				if (Build.VERSION.SDK_INT >= 26) {
 					// starting the FOREGROUND service
 					// service has to display non-dismissable notification within 5 secs
@@ -575,7 +657,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 	fun buttonClear(view: View) {
 		draw = false
 		if (!locationServiceActive) {
-			mMap.clear()
+			if (::mMap.isInitialized) {
+				mMap.clear()
+			} else {
+				mapInitializeClear = true
+			}
 			textViewStart1.text = resources.getString(R.string.defaultString)
 			textViewStart2.text = resources.getString(R.string.defaultString)
 			textViewStart3.text = resources.getString(R.string.defaultString)
@@ -624,24 +710,33 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
 						)
+						val curTime: Long = intent.getLongExtra(C.LOCATION_UPDATE_ACTION_TIME, 0)
+						val curAltitude: Double = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_ALTITUDE, 0.0)
 						val prevPos = LatLng(
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, 0.0),
 							intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, 0.0)
 						)
+						val prevTime: Long = intent.getLongExtra(C.LOCATION_UPDATE_ACTION_PREV_TIME, 0)
+						val prevAltitude: Double = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_PREV_ALTITUDE, 0.0)
 						if (moveCam && ::mMap.isInitialized) {
 							moveMapCam = false
 							mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curPos, 16f))
 						}
 						if (lcs == null) {
 							lcs = ArrayList()
+							
 							val loc = Location("")
 							loc.latitude = prevPos.latitude
 							loc.longitude = prevPos.longitude
+							loc.time = prevTime
+							loc.altitude = prevAltitude
 							lcs!!.add(loc)
 						}
 						val loc = Location("")
 						loc.latitude = curPos!!.latitude
 						loc.longitude = curPos!!.longitude
+						loc.time = curTime
+						loc.altitude = curAltitude
 						lcs!!.add(loc)
 						
 						if (colors == null) {
@@ -653,7 +748,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 						addPolyLine(prevPos, curPos!!, color)
 					}
 					
-					if (movementCentered) {
+					if (movementCentered && ::mMap.isInitialized) {
 						mMap.animateCamera(CameraUpdateFactory.newLatLng(curPos))
 					}
 					
@@ -684,17 +779,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 						if (::mMap.isInitialized) {
 							addWp(LatLng(temp.latitude, temp.longitude))
 						} else {
-							tempWp = LatLng(temp.latitude, temp.longitude)
-							tempWpInit = true
+							mapInitializeWpLatLng = LatLng(temp.latitude, temp.longitude)
+							mapInitializeWp = true
 						}
 					}
 				}
 				C.REPLY_POINTS_LOCATIONS -> {
 					val locations = intent.getParcelableArrayListExtra<Location>(C.GENERAL_LOCATIONS)
 					val colors = intent.getIntegerArrayListExtra(C.GENERAL_COLORS)
-					if (::mMap.isInitialized) {
+					if (::mMap.isInitialized && locations != null && locations.isNotEmpty()) {
 						moveMapCam = false
-						mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(locations!![locations.size - 1].latitude, locations[locations.size - 1].longitude), 16f))
+						mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(locations[locations.size - 1].latitude, locations[locations.size - 1].longitude), 16f))
 					}
 					if (colors != null && locations != null) {
 						Log.d(TAG, colors.toString())
@@ -703,7 +798,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 				}
 				C.CLEAR_MAP -> {
 					if (!locationServiceActive) {
-						mMap.clear()
+						if (::mMap.isInitialized) {
+							mMap.clear()
+						} else {
+							mapInitializeClear = true
+						}
 					}
 				}
 			}

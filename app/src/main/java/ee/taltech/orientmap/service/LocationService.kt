@@ -182,6 +182,7 @@ class LocationService : Service() {
 		
 		timer = Timer()
 		// just make min 1s so no spam
+		if (syncInterval == null) syncInterval = 1
 		val period = if (syncInterval!! <= 1) 1000L else syncInterval!! * 1000L
 		timer.schedule(timerTask, 0L, period)
 	}
@@ -394,8 +395,12 @@ class LocationService : Service() {
 			hasLocation = true
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_TIME, location.time)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_ALTITUDE, location.altitude)
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LATITUDE, prevLocation.latitude)
 			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_LONGITUDE, prevLocation.longitude)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_TIME, prevLocation.time)
+			intent.putExtra(C.LOCATION_UPDATE_ACTION_PREV_ALTITUDE, prevLocation.altitude)
 			intent.putExtra(
 				C.LOCATION_UPDATE_ACTION_COLOR,
 				Utils.getColorBasedOnGradient(prevLocation, currentLocation!!, PreferenceUtils.getFastSpeedTime(this), PreferenceUtils.getSlowSpeedTime(this), C.FAST_COLOR, C.SLOW_COLOR)
